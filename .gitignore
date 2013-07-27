@@ -1,7 +1,7 @@
 *~
 .gradle
-/build
-/out
+build/
+out/
 /intTestHomeDir
 /subprojects/*/out
 /intellij
