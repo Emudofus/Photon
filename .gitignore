@@ -26,3 +26,4 @@ out/
 /incoming-distributions
 .idea
 *.sublime-*
+gradle/
