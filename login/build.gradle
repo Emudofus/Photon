@@ -1,5 +1,5 @@
 apply plugin: 'application'
-mainClassName = 'TODO'
+mainClassName = 'org.photon.login.LoginServer'
 
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
