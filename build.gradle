@@ -1,6 +1,6 @@
-version = '1.0-master'
-
 allprojects {
+    version = '1.0-master'
+
     apply plugin: 'scala'
     apply plugin: 'idea'
 
@@ -9,7 +9,7 @@ allprojects {
     }
 
     dependencies {
-	compile 'org.scala-lang:scala-library:2.10.2'
+	    compile 'org.scala-lang:scala-library:2.10.2'
     }
 
     sourceSets {

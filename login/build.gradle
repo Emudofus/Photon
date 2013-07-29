@@ -1,2 +1,7 @@
 apply plugin: 'application'
 mainClassName = 'TODO'
+
+dependencies {
+    compile "com.typesafe:config:${typesafeConfigVersion}"
+    compile "com.twitter:finagle-core_${scalaVersion}:${finagleVersion}"
+}
