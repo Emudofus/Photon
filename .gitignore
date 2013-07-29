@@ -15,6 +15,7 @@ out/
 *.ipr
 *.iws
 /buildSrc/out
+/gradle
 *.classpath
 *.project
 *.settings
