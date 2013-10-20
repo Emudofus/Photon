@@ -120,11 +120,13 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
   class NetworkDecoderImpl extends ChannelInboundHandlerAdapter {
     override def channelRead(ctx: ChannelHandlerContext, o: Any) {
       o match {
-        case data: String => DofusProtocol.deserializers.get(data.substring(0, 2)) match {
-          case Some(deserializer) =>
-            val msg = deserializer.deserialize(data.substring(2))
-            ctx.fireChannelRead(msg)
-        }
+        case data: String =>
+          val msg = for {
+            (opcode, rest) <- data.splitAt(2)
+            deserializer <- DofusProtocol.deserializers.get(opcode)
+          } yield deserializer.deserialize(rest)
+
+          ctx.fireChannelRead(msg)
       }
     }
   }
@@ -147,6 +149,8 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
 
   class NetworkDispatcherImpl extends ChannelInboundHandlerAdapter {
+    import HandlerComponent._
+
     override def channelRegistered(implicit ctx: ChannelHandlerContext) {
       val session = ctx.attr(networkService.sessionAttr).get
       networkHandler(Connect(session))
