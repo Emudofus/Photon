@@ -1,18 +1,20 @@
 package org.photon.protocol
 
-trait Message
+trait Message {
+  def definition: MessageDefinition
+}
 
-trait MessageDefinition[T <: Message] {
+trait MessageDefinition {
   type Opcode
   def opcode: Opcode
 }
 
-trait Serializable { self: Message =>
+trait Serializable {
   type Out
   def serialize(out: Out)
 }
 
-trait Deserializer[T <: Message] { self: MessageDefinition[T] =>
+trait Deserializer {
   type In
-  def deserialize(in: In): T
+  def deserialize(in: In): Message
 }

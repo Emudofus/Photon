@@ -2,6 +2,12 @@ apply plugin: 'application'
 mainClassName = 'org.photon.login.LoginServer'
 
 dependencies {
-    compile "com.typesafe.akka:akka-actor_${scalaVersion}:${akkaVersion}"
+    compile "com.typesafe:config:${typesafeConfigVersion}"
+    compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
+
+    compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
+
+    compile "io.netty:netty-all:${nettyVersion}"
+
     compile project(":protocol")
 }
