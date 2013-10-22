@@ -1,29 +1,59 @@
 package org.photon.login
 
-import com.twitter.util.Future
+import com.twitter.util.{NonFatal, Promise, Future}
 import java.nio.charset.Charset
 import com.typesafe.config.ConfigFactory
+import java.net.SocketAddress
 
 trait NetworkSession {
-  type TFut = Future[this.type]
   type NetworkService <: org.photon.login.NetworkService
 
   def service: NetworkService
-  def closeFuture: TFut
+  def closeFuture: Future[NetworkSession]
+  def remoteAddress: SocketAddress
 
-  def write(o: Any): TFut
-  def flush(): TFut
-  def close(): TFut
+  def write(o: Any): Future[NetworkSession]
+  def flush(): Future[NetworkSession]
+  def close(): Future[NetworkSession]
 
   def !(o: Any) = write(o) flatMap (_.flush())
+
+  class Transaction private[NetworkSession]() {
+    private[NetworkSession] var future: Future[NetworkSession] = _
+
+    def write(o: Any) = {
+      if (future != null) future = future flatMap (_.write(o))
+      else future = NetworkSession.this.write(o)
+      this
+    }
+
+    def then(o: Any) = write(o)
+  }
+
+  def transaction[R](fn: Transaction => R): Future[NetworkSession] = {
+    val t = new Transaction
+    try {
+      fn(t)
+      t.future.flatMap(_.flush())
+    } catch {
+      case NonFatal(e) => Future.exception(e)
+    }
+  }
+}
+
+object NetworkSession {
+  def write(o: Any)(implicit tr: NetworkSession#Transaction) = tr.write(o)
+
+  implicit class FutureNetworkSessionExtension(val future: Future[NetworkSession]) extends AnyVal {
+    def thenClose() = future.flatMap(_.close())
+  }
 }
 
 trait NetworkService {
-  type TFut = Future[this.type]
   type NetworkSession <: org.photon.login.NetworkSession
 
-  def boot(): TFut
-  def kill(): TFut
+  def boot(): Future[NetworkService]
+  def kill(): Future[NetworkService]
   def connected: Seq[NetworkSession]
 }
 

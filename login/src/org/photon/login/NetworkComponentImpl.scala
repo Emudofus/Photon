@@ -35,8 +35,8 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
 
     def connected = sessions.toSeq
-    def boot(): TFut = server.bind(new InetSocketAddress(networkPort)) toTw(this)
-    def kill(): TFut = server.close() toTw(this)
+    def boot(): Future[NetworkService] = server.bind(new InetSocketAddress(networkPort)) toTw(this)
+    def kill(): Future[NetworkService] = server.close() toTw(this)
   }
 
 
@@ -46,20 +46,21 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
     private val closePromise = channel.closeFuture() toTw(this)
 
     def service = networkService
-    def closeFuture: TFut = closePromise
+    def closeFuture = closePromise
+    def remoteAddress = channel.remoteAddress()
 
 
-    def write(o: Any): TFut = channel.write(o) toTw(this)
-    def flush(): TFut = {
+    def write(o: Any): Future[NetworkSession] = channel.write(o) toTw(this)
+    def flush(): Future[NetworkSession] = {
       channel.flush()
       Future(this)
     }
-    def close(): TFut = {
+    def close(): Future[NetworkSession] = {
       channel.close()
       closeFuture
     }
 
-    override def !(o: Any): TFut = channel.writeAndFlush(o) toTw(this)
+    override def !(o: Any): Future[NetworkSession] = channel.writeAndFlush(o) toTw(this)
   }
 
 
@@ -121,12 +122,12 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
     override def channelRead(ctx: ChannelHandlerContext, o: Any) {
       o match {
         case data: String =>
-          val msg = for {
-            (opcode, rest) <- data.splitAt(2)
-            deserializer <- DofusProtocol.deserializers.get(opcode)
-          } yield deserializer.deserialize(rest)
+          val (opcode, rest) = data.splitAt(2)
 
-          ctx.fireChannelRead(msg)
+          DofusProtocol.deserializers.get(opcode) match {
+            case Some(d) => ctx.fireChannelRead(d.deserialize(rest))
+            case None => logger.trace(s"unknown opcode $opcode")
+          }
       }
     }
   }
@@ -151,7 +152,7 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
   class NetworkDispatcherImpl extends ChannelInboundHandlerAdapter {
     import HandlerComponent._
 
-    override def channelRegistered(implicit ctx: ChannelHandlerContext) {
+    override def channelRegistered(ctx: ChannelHandlerContext) {
       val session = ctx.attr(networkService.sessionAttr).get
       networkHandler(Connect(session))
     }

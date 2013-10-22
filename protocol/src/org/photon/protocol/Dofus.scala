@@ -13,7 +13,17 @@ trait DofusDeserializer extends MessageDefinition with Deserializer {
   type Opcode = String
 }
 
+trait DofusStaticMessage extends DofusMessage with DofusDeserializer {
+  val data: Any
+
+  override def definition = this
+  def serialize(out: Out) = out ++= data.toString
+  def deserialize(in: In) = this
+}
+
 object DofusProtocol {
+  val version = "1.29.1"
+
   val deserializers = Map[String, DofusDeserializer](
     QueueStatusRequest.opcode -> QueueStatusRequest
   )
