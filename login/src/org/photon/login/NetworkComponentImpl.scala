@@ -35,22 +35,22 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
 
     def connected = sessions.toSeq
-    def boot(): Future[NetworkService] = server.bind(new InetSocketAddress(networkPort)) toTw(this)
-    def kill(): Future[NetworkService] = server.close() toTw(this)
+    def boot(): Future[NetworkService] = server.bind(new InetSocketAddress(networkPort)) toTw this
+    def kill(): Future[NetworkService] = server.close() toTw this
   }
 
 
   class NetworkSessionImpl(channel: SocketChannel) extends NetworkSession {
     type NetworkService = networkService.type
 
-    private val closePromise = channel.closeFuture() toTw(this)
+    private val closePromise = channel.closeFuture() toTw this
 
     def service = networkService
     def closeFuture = closePromise
     def remoteAddress = channel.remoteAddress()
 
 
-    def write(o: Any): Future[NetworkSession] = channel.write(o) toTw(this)
+    def write(o: Any): Future[NetworkSession] = channel write o toTw this
     def flush(): Future[NetworkSession] = {
       channel.flush()
       Future(this)
@@ -60,7 +60,7 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
       closeFuture
     }
 
-    override def !(o: Any): Future[NetworkSession] = channel.writeAndFlush(o) toTw(this)
+    override def !(o: Any): Future[NetworkSession] = channel writeAndFlush o toTw this
   }
 
 
@@ -85,7 +85,7 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
       super.channelRegistered(ctx)
     }
-    
+
     override def channelUnregistered(ctx: ChannelHandlerContext) {
       super.channelUnregistered(ctx)
 

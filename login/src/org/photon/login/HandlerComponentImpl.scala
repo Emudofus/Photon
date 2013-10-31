@@ -23,7 +23,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
     case Message(s, VersionMessage(invalid)) =>
       logger.warn(s"client ${s.remoteAddress} had a invalid client version $invalid")
 
-      (s ! InvalidVersionMessage).thenClose()
+      s !! InvalidVersionMessage
   }
 
 
@@ -35,9 +35,9 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
         }
 
       } onFailure {
-        case BannedUserException() =>       (s ! BannedUserMessage).thenClose()
-        case AlreadyConnectedException() => (s ! AlreadyConnectedMessage).thenClose()
-        case AccessDeniedException() =>     (s ! AccessDeniedMessage).thenClose()
+        case BannedUserException() =>       s !! BannedUserMessage
+        case AlreadyConnectedException() => s !! AlreadyConnectedMessage
+        case AccessDeniedException() =>     s !! AccessDeniedMessage
       }
   }
 

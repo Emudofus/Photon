@@ -18,6 +18,8 @@ trait NetworkSession {
 
   def !(o: Any) = write(o) flatMap (_.flush())
 
+  def !!(o: Any) = this ! o flatMap(_.close())
+
   class Transaction private[NetworkSession]() {
     private[NetworkSession] var future: Future[NetworkSession] = _
 
@@ -43,10 +45,6 @@ trait NetworkSession {
 
 object NetworkSession {
   def write(o: Any)(implicit tr: NetworkSession#Transaction) = tr.write(o)
-
-  implicit class FutureNetworkSessionExtension(val future: Future[NetworkSession]) extends AnyVal {
-    def thenClose() = future.flatMap(_.close())
-  }
 }
 
 trait NetworkService {
