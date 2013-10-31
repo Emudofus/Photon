@@ -18,7 +18,9 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
 
 
   val versionHandler: NetworkHandler = {
-    case Message(s, VersionMessage(DofusProtocol.version)) => // valid version, do nothing
+    case Message(s, VersionMessage(DofusProtocol.version)) =>
+      s.state = AuthenticationState
+
     case Message(s, VersionMessage(invalid)) =>
       logger.warn(s"client ${s.remoteAddress} had a invalid client version $invalid")
 
@@ -29,6 +31,8 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
   val authHandler: NetworkHandler = {
     case Message(s, AuthenticationMessage(username, password)) =>
       authenticate(s, username, password) onSuccess { _ =>
+        s.state = ServerSelectionState
+
         s transaction { implicit t =>
           write(???)
         }

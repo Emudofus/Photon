@@ -10,11 +10,13 @@ import scala.collection.mutable.ArrayBuffer
 import io.netty.channel.socket.SocketChannel
 import io.netty.util.AttributeKey
 import io.netty.handler.codec.{Delimiters, DelimiterBasedFrameDecoder}
-import org.photon.protocol.{DofusMessage, DofusProtocol}
+import org.photon.protocol.{Message, DofusDeserializer, DofusMessage, DofusProtocol}
 import io.netty.handler.codec.string.{StringEncoder, StringDecoder}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.photon.common.Strings
 import java.util.Random
+import org.photon.protocol.login.{AuthenticationMessage, VersionMessage}
+import io.netty.buffer.Unpooled
 
 trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationComponent with HandlerComponent =>
   import NettyConversion._
@@ -54,9 +56,12 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
 
 
   class NetworkSessionImpl(channel: SocketChannel, val ticket: String) extends NetworkSession {
+    import NetworkSession._
     type NetworkService = networkService.type
 
     private val closePromise = channel.closeFuture() toTw this
+
+    var state: State = VersionCheckState
 
     def service = networkService
     def closeFuture = closePromise
@@ -84,7 +89,7 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
       ch.attr(networkService.sessionAttr).set(session)
 
       ch.pipeline
-        .addLast(new DelimiterBasedFrameDecoder(64, Delimiters.nulDelimiter(): _*), new StringDecoder(networkCharset))
+        .addLast(new DelimiterBasedFrameDecoder(64, Unpooled.wrappedBuffer(Array[Byte]('\n', '\0'))), new StringDecoder(networkCharset))
         .addLast(new StringEncoder(networkCharset))
         .addLast("codec", new NetworkCodecImpl)
         .addLast("logger", new NetworkLoggerImpl)
@@ -133,14 +138,27 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
 
 
   class NetworkDecoderImpl extends ChannelInboundHandlerAdapter with Logging {
+    import NetworkSession.{VersionCheckState, AuthenticationState, ServerSelectionState}
+
     override def channelRead(ctx: ChannelHandlerContext, o: Any) {
+      val session = ctx.channel.attr(networkService.sessionAttr).get
+
       o match {
         case data: String =>
-          val (opcode, rest) = data.splitAt(2)
+          session.state match {
+            case VersionCheckState =>
+              ctx.fireChannelRead(VersionMessage.deserialize(data))
 
-          DofusProtocol.deserializers.get(opcode) match {
-            case Some(d) => ctx.fireChannelRead(d.deserialize(rest))
-            case None => logger.trace(s"unknown opcode $opcode")
+            case AuthenticationState =>
+              ctx.fireChannelRead(AuthenticationMessage.deserialize(data))
+
+            case ServerSelectionState =>
+              val (opcode, rest) = data.splitAt(2)
+
+              DofusProtocol.deserializers.get(opcode) match {
+                case Some(d) => ctx.fireChannelRead(d.deserialize(rest))
+                case None => logger.trace(s"unknown opcode $opcode")
+              }
           }
       }
     }

@@ -6,7 +6,10 @@ import com.typesafe.config.ConfigFactory
 import java.net.SocketAddress
 
 trait NetworkSession {
+  import NetworkSession._
   type NetworkService <: org.photon.login.NetworkService
+
+  var state: State
 
   def service: NetworkService
   def closeFuture: Future[NetworkSession]
@@ -44,6 +47,11 @@ trait NetworkSession {
 
 object NetworkSession {
   def write(o: Any)(implicit tr: NetworkSession#Transaction) = tr.write(o)
+
+  sealed trait State
+  case object VersionCheckState extends State
+  case object AuthenticationState extends State
+  case object ServerSelectionState extends State
 }
 
 trait NetworkService {
