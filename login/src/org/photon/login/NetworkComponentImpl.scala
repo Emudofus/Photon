@@ -13,14 +13,16 @@ import io.netty.handler.codec.{Delimiters, DelimiterBasedFrameDecoder}
 import org.photon.protocol.{DofusMessage, DofusProtocol}
 import io.netty.handler.codec.string.{StringEncoder, StringDecoder}
 import com.typesafe.scalalogging.slf4j.Logging
+import org.photon.common.Strings
+import java.util.Random
 
-trait NetworkComponentImpl extends NetworkComponent with Logging { self: ConfigurationComponent with HandlerComponent =>
+trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationComponent with HandlerComponent =>
   import NettyConversion._
 
   val networkService = new NetworkServiceImpl
 
 
-  class NetworkServiceImpl extends NetworkService {
+  class NetworkServiceImpl extends NetworkService with Logging {
     type NetworkSession = NetworkSessionImpl
 
     private val server = new ServerBootstrap()
@@ -35,12 +37,23 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
 
     def connected = sessions.toSeq
-    def boot(): Future[NetworkService] = server.bind(new InetSocketAddress(networkPort)) toTw this
-    def kill(): Future[NetworkService] = server.close() toTw this
+
+    def boot(): Future[NetworkService] = server.bind(new InetSocketAddress(networkPort)) toTw this onSuccess { _ =>
+      logger.info(s"successfully bound on $networkPort")
+    } onFailure { t =>
+      logger.error(s"got an error while binding on $networkPort", t)
+    }
+
+
+    def kill(): Future[NetworkService] = server.close() toTw this onSuccess { _ =>
+      logger.info("successfully closed")
+    } onFailure { t =>
+      logger.error("got an error while closing", t)
+    }
   }
 
 
-  class NetworkSessionImpl(channel: SocketChannel) extends NetworkSession {
+  class NetworkSessionImpl(channel: SocketChannel, val ticket: String) extends NetworkSession {
     type NetworkService = networkService.type
 
     private val closePromise = channel.closeFuture() toTw this
@@ -48,7 +61,6 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
     def service = networkService
     def closeFuture = closePromise
     def remoteAddress = channel.remoteAddress()
-
 
     def write(o: Any): Future[NetworkSession] = channel write o toTw this
     def flush(): Future[NetworkSession] = {
@@ -65,8 +77,10 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
 
   class NetworkHandlerImpl extends ChannelInitializer[SocketChannel] {
+    implicit val random = new Random(System.nanoTime)
+
     def initChannel(ch: SocketChannel) {
-      val session = new NetworkSessionImpl(ch)
+      val session = new NetworkSessionImpl(ch, Strings.next(32))
       ch.attr(networkService.sessionAttr).set(session)
 
       ch.pipeline
@@ -79,7 +93,7 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
   }
   
   
-  class NetworkLoggerImpl extends ChannelDuplexHandler {
+  class NetworkLoggerImpl extends ChannelDuplexHandler with Logging {
     override def channelRegistered(ctx: ChannelHandlerContext) {
       logger.debug(s"connect ${ctx.channel.remoteAddress}")
 
@@ -100,7 +114,7 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
 
     override def channelRead(ctx: ChannelHandlerContext, msg: Any) {
       logger.debug(msg match {
-        case msg: DofusMessage => s"receive ${msg.definition.opcode} from ${ctx.channel.remoteAddress}"
+        case msg: DofusMessage => s"receive $msg from ${ctx.channel.remoteAddress}"
         case other => s"receive $other from ${ctx.channel.remoteAddress}"
       })
 
@@ -111,14 +125,14 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
       super.write(ctx, msg, promise)
 
       logger.debug(msg match {
-        case msg: DofusMessage => s"send ${msg.definition.opcode} to ${ctx.channel.remoteAddress}"
+        case msg: DofusMessage => s"send $msg to ${ctx.channel.remoteAddress}"
         case other => s"send $other to ${ctx.channel.remoteAddress}"
       })
     }
   }
 
 
-  class NetworkDecoderImpl extends ChannelInboundHandlerAdapter {
+  class NetworkDecoderImpl extends ChannelInboundHandlerAdapter with Logging {
     override def channelRead(ctx: ChannelHandlerContext, o: Any) {
       o match {
         case data: String =>
@@ -146,24 +160,24 @@ trait NetworkComponentImpl extends NetworkComponent with Logging { self: Configu
     }
   }
 
-  class NetworkCodecImpl extends CombinedChannelDuplexHandler[NetworkDecoderImpl, NetworkEncoderImpl]
+  class NetworkCodecImpl extends CombinedChannelDuplexHandler(new NetworkDecoderImpl, new NetworkEncoderImpl)
 
 
   class NetworkDispatcherImpl extends ChannelInboundHandlerAdapter {
     import HandlerComponent._
 
     override def channelRegistered(ctx: ChannelHandlerContext) {
-      val session = ctx.attr(networkService.sessionAttr).get
+      val session = ctx.channel.attr(networkService.sessionAttr).get
       networkHandler(Connect(session))
     }
 
     override def channelUnregistered(ctx: ChannelHandlerContext) {
-      val session = ctx.attr(networkService.sessionAttr).get
+      val session = ctx.channel.attr(networkService.sessionAttr).get
       networkHandler(Disconnect(session))
     }
 
     override def channelRead(ctx: ChannelHandlerContext, msg: Any) {
-      val session = ctx.attr(networkService.sessionAttr).get
+      val session = ctx.channel.attr(networkService.sessionAttr).get
       networkHandler(Message(session, msg))
     }
   }

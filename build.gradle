@@ -17,6 +17,9 @@ allprojects {
             scala {
                 srcDirs = ['src']
             }
+            resources {
+                srcDirs = ['src']
+            }
         }
         test {
             scala {

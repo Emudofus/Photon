@@ -3,16 +3,15 @@ package org.photon.login
 import org.photon.protocol.DofusProtocol
 import org.photon.protocol.login._
 import com.typesafe.scalalogging.slf4j.Logging
+import org.photon.common.Strings
 
 trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAuthenticationComponent =>
   import HandlerComponent._
   import org.photon.login.NetworkSession._
 
-  def newTicket(): String = ???
-
   val connections: NetworkHandler = {
     case Connect(s) =>
-      s ! HelloConnectMessage(newTicket())
+      s ! HelloConnectMessage(s.ticket)
 
     case Disconnect(s) =>
   }

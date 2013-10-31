@@ -1,27 +1,25 @@
 package org.photon.login
 
 import com.typesafe.config.ConfigFactory
-import org.photon.protocol.login._
-import com.twitter.util.{Future, Await}
-import org.photon.protocol.DofusProtocol
+import com.twitter.util.Future
+import com.typesafe.scalalogging.slf4j.Logging
+import org.slf4j.LoggerFactory
 
 object LoginServer {
   def main(args: Array[String]) {
-    import JavaConversion.RuntimeExtension
-
     val component = new Object
       with ConfigurationComponent
       with UserAuthenticationComponent
       with NetworkComponentImpl
       with HandlerComponentImpl
     {
-      val config = ConfigFactory.load()
+      lazy val config = ConfigFactory.load()
 
       def authenticate(s: NetworkSession, username: String, password: String): Future[Unit] = Future(???)
     }
 
     component.networkService.boot() onSuccess { s =>
-      Runtime.getRuntime.onShutdown(s.kill)
+      sys.addShutdownHook { s.kill() }
     }
   }
 }

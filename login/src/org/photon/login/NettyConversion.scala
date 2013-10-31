@@ -15,7 +15,9 @@ object NettyConversion {
     def onCompleted(fn: ChannelFuture => Unit) = fut.addListener(fn)
 
     def toTw[T](fn: => T, promise: Promise[T] = Promise[T]): Promise[T] = {
-      onCompleted(_ => promise.setValue(fn))
+      fut.addListener { ch: ChannelFuture =>
+        promise setValue fn
+      }
       promise
     }
   }

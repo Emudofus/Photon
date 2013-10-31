@@ -11,6 +11,7 @@ trait NetworkSession {
   def service: NetworkService
   def closeFuture: Future[NetworkSession]
   def remoteAddress: SocketAddress
+  def ticket: String
 
   def write(o: Any): Future[NetworkSession]
   def flush(): Future[NetworkSession]
@@ -18,7 +19,7 @@ trait NetworkSession {
 
   def !(o: Any) = write(o) flatMap (_.flush())
 
-  def !!(o: Any) = this ! o flatMap(_.close())
+  def !!(o: Any) = (this ! o) flatMap (_.close())
 
   class Transaction private[NetworkSession]() {
     private[NetworkSession] var future: Future[NetworkSession] = _
@@ -28,8 +29,6 @@ trait NetworkSession {
       else future = NetworkSession.this.write(o)
       this
     }
-
-    def then(o: Any) = write(o)
   }
 
   def transaction[R](fn: Transaction => R): Future[NetworkSession] = {
@@ -57,10 +56,11 @@ trait NetworkService {
 
 trait NetworkComponent { self: ConfigurationComponent =>
 
-  val networkConfig = config.atKey("photon.network.login")
+  val networkConfig = config.getConfig("photon.network.login")
+
   val networkPort = networkConfig.getInt("port")
   val networkCharset = Charset.forName(networkConfig.getString("charset"))
-  val networkMaxFrameLength = networkConfig.getInt("maxFrameLength")
+  val networkMaxFrameLength = networkConfig.getInt("max-frame-length")
 
   val networkService: NetworkService
 
