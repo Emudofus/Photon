@@ -11,5 +11,5 @@ jdk:
 branches:
   only:
     - master
-before_invalid:
+before_install:
   - chmod +x ./gradlew
