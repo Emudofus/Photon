@@ -48,7 +48,7 @@ case class AuthenticationMessage(username: String, password: String) extends Dof
 
 object AuthenticationMessage extends DofusDeserializer {
   val opcode = ""
-  def deserialize(in: In) = in.split("\\n") match {
+  def deserialize(in: In) = in.split("\\n#1") match {
     case Array(username, password) => Some(AuthenticationMessage(username, password))
     case _ => None
   }
