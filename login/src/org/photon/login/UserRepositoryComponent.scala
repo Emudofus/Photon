@@ -21,7 +21,10 @@ trait Repository[T] {
 case class User(
   id: Long,
   name: String,
-  password: String
+  password: String,
+  nickname: String,
+  secretQuestion: String,
+  secretAnswer: String
 ) extends Model[User] {
 
 }
