@@ -27,21 +27,6 @@ trait NetworkSession {
 
   def !!(o: Any) = (this ! o) flatMap (_.close())
 
-  type Transaction = mutable.Builder[Any, _]
-
-  def transaction[R](fn: Transaction => R): Future[NetworkSession] = {
-    val buf = List.newBuilder[Any]
-    fn(buf)
-
-    @tailrec
-    def rec(fut: Future[NetworkSession], buf: List[Any]): Future[NetworkSession] = buf match {
-      case head :: tail => rec(fut flatMap {_ write head}, tail)
-      case Nil => fut
-    }
-
-    rec(Future(this), buf.result()) flatMap {_.flush()}
-  }
-
   def transaction(msgs: Any*): Future[NetworkSession] = {
 
     @tailrec
@@ -51,6 +36,12 @@ trait NetworkSession {
     }
 
     rec(Future(this), msgs.toList) flatMap {_.flush()}
+  }
+
+  def transaction[R](fn: mutable.Builder[Any, _] => R): Future[NetworkSession] = {
+    val buf = List.newBuilder[Any]
+    fn(buf)
+    transaction(buf.result(): _*)
   }
 }
 
