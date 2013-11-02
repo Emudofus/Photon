@@ -9,8 +9,8 @@ import java.net.InetSocketAddress
 import scala.collection.mutable.ArrayBuffer
 import io.netty.channel.socket.SocketChannel
 import io.netty.util.AttributeKey
-import io.netty.handler.codec.{Delimiters, DelimiterBasedFrameDecoder}
-import org.photon.protocol.{Message, DofusDeserializer, DofusMessage, DofusProtocol}
+import io.netty.handler.codec.DelimiterBasedFrameDecoder
+import org.photon.protocol.{DofusMessage, DofusProtocol}
 import io.netty.handler.codec.string.{StringEncoder, StringDecoder}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.photon.common.Strings
@@ -146,20 +146,20 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
 
       o match {
         case data: String =>
-          session.state match {
-            case VersionCheckState =>
-              ctx.fireChannelRead(VersionMessage.deserialize(data))
+          val msg = session.state match {
+            case VersionCheckState => VersionMessage.deserialize(data)
 
-            case AuthenticationState =>
-              ctx.fireChannelRead(AuthenticationMessage.deserialize(data))
+            case AuthenticationState => AuthenticationMessage.deserialize(data)
 
             case ServerSelectionState =>
               val (opcode, rest) = data.splitAt(2)
 
-              DofusProtocol.deserializers.get(opcode) match {
-                case Some(d) => ctx.fireChannelRead(d.deserialize(rest))
-                case None => logger.trace(s"unknown opcode $opcode")
-              }
+              DofusProtocol.deserializers.get(opcode).flatMap(_.deserialize(rest))
+          }
+
+          msg match {
+            case Some(m) => ctx.fireChannelRead(m)
+            case None => logger.warn(s"can't deserialize $data")
           }
       }
     }

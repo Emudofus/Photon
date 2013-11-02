@@ -16,5 +16,5 @@ trait Serializable {
 
 trait Deserializer {
   type In
-  def deserialize(in: In): Message
+  def deserialize(in: In): Option[Message]
 }

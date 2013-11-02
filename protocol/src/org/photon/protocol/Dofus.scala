@@ -18,7 +18,7 @@ trait DofusStaticMessage extends DofusMessage with DofusDeserializer {
 
   override def definition = this
   def serialize(out: Out) = out ++= data.toString
-  def deserialize(in: In) = this
+  def deserialize(in: In) = if (in.startsWith(opcode) && in.endsWith(data.toString)) Some(this) else None
 }
 
 object DofusProtocol {
