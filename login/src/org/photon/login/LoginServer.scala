@@ -1,9 +1,6 @@
 package org.photon.login
 
 import com.typesafe.config.ConfigFactory
-import com.twitter.util.Future
-import com.typesafe.scalalogging.slf4j.Logging
-import org.slf4j.LoggerFactory
 
 object LoginServer {
   def main(args: Array[String]) {

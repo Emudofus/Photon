@@ -42,14 +42,15 @@ trait NetworkSession {
     rec(Future(this), buf.result()) flatMap {_.flush()}
   }
 
-  def transaction(l: List[Any]): Future[NetworkSession] = {
+  def transaction(msgs: Any*): Future[NetworkSession] = {
+
     @tailrec
     def rec(fut: Future[NetworkSession], l: List[Any]): Future[NetworkSession] = l match {
       case head :: tail => rec(fut flatMap {_.write(head)}, tail)
       case Nil => fut
     }
 
-    rec(Future(this), l) flatMap {_.flush()}
+    rec(Future(this), msgs.toList) flatMap {_.flush()}
   }
 }
 

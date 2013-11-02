@@ -13,13 +13,14 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
     case Connect(s) =>
       s ! HelloConnectMessage(s.ticket)
 
-    case Disconnect(s) =>
+    case Disconnect(s) => Future.Done
   }
 
 
   val versionHandler: NetworkHandler = {
     case Message(s, VersionMessage(DofusProtocol.version)) =>
       s.state = AuthenticationState
+      Future.Done
 
     case Message(s, VersionMessage(invalid)) =>
       logger.warn(s"client ${s.remoteAddress} had a invalid client version $invalid")
@@ -37,7 +38,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
           s.state = ServerSelectionState
           s.userOption = Some(user)
 
-          s transaction List(
+          s transaction (
             SetNicknameMessage(user.nickname),
             SetCommunityMessage(0),
             SetSecretQuestion(user.secretQuestion),
@@ -56,7 +57,8 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
 
 
   val realmHandler: NetworkHandler = {
-    case Message(s, QueueStatusRequest) =>
+    case Message(s, QueueStatusRequestMessage) => Future.Done
+    case Message(s, ServerListRequestMessage) => Future.Done
   }
 
 

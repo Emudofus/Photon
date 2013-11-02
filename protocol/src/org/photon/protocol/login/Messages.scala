@@ -35,7 +35,7 @@ case class HelloConnectMessage(ticket: String) extends DofusMessage {
 
 object HelloConnectMessage extends DofusDeserializer {
   val opcode = "HC"
-  def deserialize(in: In) = if (in.startsWith(opcode)) Some(HelloConnectMessage(in)) else None
+  def deserialize(in: In) = Some(HelloConnectMessage(in))
 }
 
 case class AuthenticationMessage(username: String, password: String) extends DofusMessage {
@@ -54,7 +54,7 @@ object AuthenticationMessage extends DofusDeserializer {
   }
 }
 
-case object QueueStatusRequest extends DofusStaticMessage {
+case object QueueStatusRequestMessage extends DofusStaticMessage {
   val opcode = "Af"
   val data = ""
 }
@@ -66,7 +66,7 @@ case class SetNicknameMessage(nickname: String) extends DofusMessage {
 
 object SetNicknameMessage extends DofusDeserializer {
   def opcode = "Ad"
-  def deserialize(in: In) = if (in.startsWith(opcode)) Some(SetNicknameMessage(in.substring(2))) else None
+  def deserialize(in: In) = Some(SetNicknameMessage(in))
 }
 
 case class SetCommunityMessage(communityId: Int) extends DofusMessage {
@@ -76,15 +76,12 @@ case class SetCommunityMessage(communityId: Int) extends DofusMessage {
 
 object SetCommunityMessage extends DofusDeserializer {
   def opcode = "Ac"
-  def deserialize(in: In): Option[SetCommunityMessage] = {
-    if (in.startsWith(opcode)) {
-      try {
-        val communityId = in.substring(opcode.length).toInt
-        return Some(SetCommunityMessage(communityId))
-      }
+  def deserialize(in: In) = {
+    try {
+      Some(SetCommunityMessage(in.toInt))
+    } catch {
+      case _: NumberFormatException => None
     }
-
-    None
   }
 }
 
@@ -95,7 +92,7 @@ case class SetSecretQuestion(secretQuestion: String) extends DofusMessage {
 
 object SetSecretQuestion extends DofusDeserializer {
   def opcode = "AQ"
-  def deserialize(in: In) = if (in.startsWith(opcode)) Some(SetSecretQuestion(in.substring(2).replace("+", " "))) else None
+  def deserialize(in: In) = Some(SetSecretQuestion(in.replace("+", " ")))
 }
 
 case class AuthenticationSuccessMessage(hasRights: Boolean) extends DofusMessage {
@@ -105,5 +102,10 @@ case class AuthenticationSuccessMessage(hasRights: Boolean) extends DofusMessage
 
 object AuthenticationSuccessMessage extends DofusDeserializer {
   val opcode = "AlK"
-  def deserialize(in: In) = if (in.startsWith(opcode)) Some(AuthenticationSuccessMessage(in.substring(3) == "1")) else None
+  def deserialize(in: In) = Some(AuthenticationSuccessMessage(in == "1"))
+}
+
+case object ServerListRequestMessage extends DofusStaticMessage {
+  val opcode = "Ax"
+  val data = ""
 }
