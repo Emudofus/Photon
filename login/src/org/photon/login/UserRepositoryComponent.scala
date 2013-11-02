@@ -3,7 +3,7 @@ package org.photon.login
 import com.twitter.util.Future
 
 trait Model[T] {
-  protected def self(implicit ev: this.type <:< T) = ev(this)
+  protected def self = this.asInstanceOf[T]
 
   def persist(implicit r: Repository[T]) = r.persist(self)
   def remove(implicit r: Repository[T]) = r.remove(self)
