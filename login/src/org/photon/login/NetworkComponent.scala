@@ -10,6 +10,8 @@ trait NetworkSession {
   type NetworkService <: org.photon.login.NetworkService
 
   var state: State
+  var userOption: Option[User]
+  def user = userOption.get
 
   def service: NetworkService
   def closeFuture: Future[NetworkSession]

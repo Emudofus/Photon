@@ -62,6 +62,7 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
     private val closePromise = channel.closeFuture() toTw this
 
     var state: State = VersionCheckState
+    var userOption: Option[User] = None
 
     def service = networkService
     def closeFuture = closePromise

@@ -30,8 +30,11 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
 
   val authHandler: NetworkHandler = {
     case Message(s, AuthenticationMessage(username, password)) =>
-      authenticate(s, username, password) onSuccess { _ =>
+      require(s.userOption.isEmpty, s"expected a non-logged client ${s.remoteAddress}")
+
+      authenticate(s, username, password) onSuccess { user =>
         s.state = ServerSelectionState
+        s.userOption = Some(user)
 
         s transaction { implicit t =>
           write(???)
