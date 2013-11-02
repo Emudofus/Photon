@@ -8,5 +8,5 @@ trait UserAuthenticationComponent {
   case class AlreadyConnectedException() extends AuthenticationException
   case class AccessDeniedException() extends AuthenticationException
 
-  def authenticate(s: NetworkSession, username: String, password: String): Future[Unit]
+  def authenticate(s: NetworkSession, username: String, password: String): Future[User]
 }

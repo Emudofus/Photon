@@ -9,13 +9,12 @@ object LoginServer {
   def main(args: Array[String]) {
     val component = new Object
       with ConfigurationComponent
-      with UserAuthenticationComponent
+      with UserRepositoryComponentImpl
+      with UserAuthenticationComponentImpl
       with NetworkComponentImpl
       with HandlerComponentImpl
     {
       lazy val config = ConfigFactory.load()
-
-      def authenticate(s: NetworkSession, username: String, password: String): Future[Unit] = Future(???)
     }
 
     component.networkService.boot() onSuccess { s =>
