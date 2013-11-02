@@ -1,6 +1,6 @@
 package org.photon.protocol.login
 
-import org.photon.protocol.{DofusProtocol, DofusStaticMessage, DofusDeserializer, DofusMessage}
+import org.photon.protocol._
 
 case class VersionMessage(version: String) extends DofusMessage {
   def definition = VersionMessage
@@ -56,4 +56,44 @@ object AuthenticationMessage extends DofusDeserializer {
 case object QueueStatusRequest extends DofusStaticMessage {
   val opcode = "Af"
   val data = ""
+}
+
+case class SetNicknameMessage(nickname: String) extends DofusMessage {
+  def definition = SetNicknameMessage
+  def serialize(out: Out) = out ++= nickname
+}
+
+object SetNicknameMessage extends DofusDeserializer {
+  def opcode = "Ad"
+  def deserialize(in: In) = SetNicknameMessage(in.substring(2))
+}
+
+case class SetCommunityMessage(communityId: Int) extends DofusMessage {
+  def definition = SetCommunityMessage
+  def serialize(out: Out) = out ++= communityId.toString
+}
+
+object SetCommunityMessage extends DofusDeserializer {
+  def opcode = "Ac"
+  def deserialize(in: In) = SetCommunityMessage(in.substring(2).toInt)
+}
+
+case class SetSecretQuestion(secretQuestion: String) extends DofusMessage {
+  def definition = SetSecretQuestion
+  def serialize(out: Out) = out ++= secretQuestion.replace(" ", "+")
+}
+
+object SetSecretQuestion extends DofusDeserializer {
+  def opcode = "AQ"
+  def deserialize(in: In) = SetSecretQuestion(in.substring(2).replace("+", " "))
+}
+
+case class AuthenticationSuccessMessage(hasRights: Boolean) extends DofusMessage {
+    def definition = AuthenticationSuccessMessage
+    def serialize(out: Out) = out ++= (if (hasRights) "1" else "0")
+}
+
+object AuthenticationSuccessMessage extends DofusDeserializer {
+    val opcode = "AlK"
+    def deserialize(in: In) = AuthenticationSuccessMessage(in.substring(3) == "1")
 }
