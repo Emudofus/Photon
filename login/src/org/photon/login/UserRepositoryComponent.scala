@@ -39,5 +39,5 @@ trait UserRepositoryComponent {
   sealed abstract class RepositoryException extends RuntimeException
   case class UnknownUserException() extends RepositoryException
 
-  val users: UserRepository
+  implicit val users: UserRepository
 }
