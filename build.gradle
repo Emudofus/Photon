@@ -10,6 +10,8 @@ allprojects {
 
     dependencies {
 	    compile 'org.scala-lang:scala-library:2.10.2'
+        compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
+        compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
     }
 
     sourceSets {

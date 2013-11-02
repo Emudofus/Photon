@@ -1,7 +1,7 @@
-package org.photon.login
+package org.photon.common
 
-import com.twitter.util.{Try, Promise, Future}
 import java.util.concurrent.Executor
+import com.twitter.util.{Try, Promise, Future}
 
 object Async {
   import JavaConversion.fn2runnable
