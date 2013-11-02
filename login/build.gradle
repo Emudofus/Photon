@@ -4,7 +4,7 @@ mainClassName = 'org.photon.login.LoginServer'
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
     compile "ch.qos.logback:logback-classic:${logbackVersion}"
-    compile "io.netty:netty-all:${nettyVersion}"
+    compile "org.apache.mina:mina-core:${minaVersion}"
 
     compile project(":common")
     compile project(":protocol")
