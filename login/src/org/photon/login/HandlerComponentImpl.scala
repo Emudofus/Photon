@@ -40,7 +40,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
 
           s transaction (
             SetNicknameMessage(user.nickname),
-            SetCommunityMessage(0),
+            SetCommunityMessage(user.communityId),
             SetSecretQuestion(user.secretQuestion),
             AuthenticationSuccessMessage(hasRights = false)
           )
