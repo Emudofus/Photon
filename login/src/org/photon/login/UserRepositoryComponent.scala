@@ -1,22 +1,8 @@
 package org.photon.login
 
 import com.twitter.util.Future
-
-trait Model[T] {
-  protected def self = this.asInstanceOf[T]
-
-  def persist(implicit r: Repository[T]) = r.persist(self)
-  def remove(implicit r: Repository[T]) = r.remove(self)
-}
-
-trait Repository[T] {
-  type PrimaryKey
-
-  def find(id: PrimaryKey): Future[T]
-
-  def persist(o: T): Future[Unit]
-  def remove(o: T): Future[Unit]
-}
+import org.joda.time.Instant
+import org.photon.common.{Repository, Model}
 
 case class User(
   id: Long,
@@ -24,14 +10,15 @@ case class User(
   password: String,
   nickname: String,
   secretQuestion: String,
-  secretAnswer: String
+  secretAnswer: String,
+  communityId: Int,
+  subscriptionEnd: Instant,
+  persisted: Boolean = false
 ) extends Model[User] {
-
+  type PrimaryKey = Long
 }
 
 trait UserRepository extends Repository[User] {
-  type PrimaryKey = Long
-
   def find(name: String): Future[User]
 }
 

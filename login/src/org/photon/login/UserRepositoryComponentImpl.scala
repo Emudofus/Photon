@@ -1,14 +1,47 @@
 package org.photon.login
 
 import com.twitter.util.Future
+import org.photon.common.BaseRepository
+import java.sql.{PreparedStatement, ResultSet}
 
-trait UserRepositoryComponentImpl extends UserRepositoryComponent {
-  class UserRepositoryImpl extends UserRepository {
-    def find(id: PrimaryKey): Future[User] = ???
-    def find(name: String): Future[User] = Future(User(1, name, "fake", name, "fake", "fake")) // TODO give real data
+trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: DatabaseComponent with ExecutorComponent =>
 
-    def persist(o: User): Future[Unit] = ???
-    def remove(o: User): Future[Unit] = ???
+  class UserRepositoryImpl extends BaseRepository[User] with UserRepository {
+    import org.photon.common.JodaConversion._
+
+    implicit val executor = self.executor
+    implicit val connection = self.database
+
+    val tableName = "users"
+    val columns = Seq("id", "name", "password", "nickname", "secret_question", "secret_answer", "community_id", "subscription_end")
+
+    protected def create(rset: ResultSet) = User(
+      rset.getLong("id"),
+      rset.getString("name"),
+      rset.getString("password"),
+      rset.getString("nickname"),
+      rset.getString("secret_question"),
+      rset.getString("secret_answer"),
+      rset.getInt("community_id"),
+      rset.getTimestamp("subscription_end"),
+      persisted = true
+    )
+
+    protected def setValues(s: PreparedStatement, o: User) {
+      s.setString(1, o.name)
+      s.setString(2, o.password)
+      s.setString(3, o.nickname)
+      s.setString(4, o.secretQuestion)
+      s.setString(5, o.secretAnswer)
+      s.setInt(6, o.communityId)
+      s.setTimestamp(7, o.subscriptionEnd)
+    }
+
+    protected def setPrimaryKey(s: PreparedStatement) = s.setLong
+
+    protected def setPersisted(o: User, rset: ResultSet) = o.copy(id = rset.getLong("id"), persisted = true)
+
+    def find(name: String): Future[User] = find("name", name)(s => s.setString) map {_ getOrElse (throw UnknownUserException())}
   }
 
 

@@ -4,7 +4,6 @@ import com.twitter.util.Future
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
 import java.net.InetSocketAddress
-import java.util.concurrent.Executors
 import org.photon.common.{Strings, Async}
 import scala.collection.mutable
 import org.apache.mina.core.service.IoHandlerAdapter
@@ -19,7 +18,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.mina.filter.util.WriteRequestFilter
 import java.util.Random
 
-trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationComponent with HandlerComponent =>
+trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationComponent with ExecutorComponent with HandlerComponent =>
   import MinaConversion._
   import scala.collection.JavaConversions._
 
@@ -28,8 +27,6 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
   private val networkSessionAttributeKey = "photon.network.login.session"
 
   class NetworkServiceImpl extends NetworkService with Logging {
-    implicit val executor = Executors.newCachedThreadPool
-
     val acceptor = new NioSocketAcceptor(executor, new NioProcessor(executor))
     acceptor.setDefaultLocalAddress(new InetSocketAddress(networkPort))
     acceptor.setHandler(new NetworkHandlerImpl)

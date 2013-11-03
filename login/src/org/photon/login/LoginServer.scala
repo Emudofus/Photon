@@ -6,6 +6,8 @@ object LoginServer {
   def main(args: Array[String]) {
     val component = new Object
       with ConfigurationComponent
+      with ExecutorComponentImpl
+      with DatabaseComponentImpl
       with UserRepositoryComponentImpl
       with UserAuthenticationComponentImpl
       with NetworkComponentImpl
