@@ -8,16 +8,15 @@ import scala.annotation.tailrec
 
 trait NetworkSession {
   import NetworkSession._
-  type NetworkService <: org.photon.login.NetworkService
 
   var state: State
   var userOption: Option[User]
   def user = userOption.get
+  def ticket: String
 
   def service: NetworkService
   def closeFuture: Future[NetworkSession]
   def remoteAddress: SocketAddress
-  def ticket: String
 
   def write(o: Any): Future[NetworkSession]
   def flush(): Future[NetworkSession]
@@ -53,21 +52,18 @@ object NetworkSession {
 }
 
 trait NetworkService {
-  type NetworkSession <: org.photon.login.NetworkSession
-
   def boot(): Future[NetworkService]
   def kill(): Future[NetworkService]
   def connected: Seq[NetworkSession]
 }
 
 trait NetworkComponent { self: ConfigurationComponent =>
-
   val networkConfig = config.getConfig("photon.network.login")
 
   val networkPort = networkConfig.getInt("port")
   val networkCharset = Charset.forName(networkConfig.getString("charset"))
   val networkMaxFrameLength = networkConfig.getInt("max-frame-length")
 
-  val networkService: NetworkService
 
+  val networkService: NetworkService
 }

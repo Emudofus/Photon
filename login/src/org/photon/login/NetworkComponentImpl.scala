@@ -28,8 +28,6 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
   private val networkSessionAttributeKey = "photon.network.login.session"
 
   class NetworkServiceImpl extends NetworkService with Logging {
-    type NetworkSession = NetworkSessionImpl
-
     implicit val executor = Executors.newCachedThreadPool
 
     val acceptor = new NioSocketAcceptor(executor, new NioProcessor(executor))
@@ -63,8 +61,6 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
 
   class NetworkSessionImpl(val ticket: String, session: IoSession) extends NetworkSession {
     import NetworkSession._
-
-    type NetworkService = NetworkServiceImpl
 
     var state: State = VersionCheckState
     var userOption: Option[User] = None
