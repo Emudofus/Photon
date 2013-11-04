@@ -64,7 +64,11 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
   def realmHandler: NetworkHandler = {
     case Message(s, QueueStatusRequestMessage) => Future.Done
 
-    case Message(s, PlayerListRequestMessage) => Future.Done
+    case Message(s, PlayerListRequestMessage) => realmManager.playerList(s.user) flatMap {
+      players => s ! PlayerListMessage(s.user.subscriptionEnd, players.map {
+        case (serverId, nplayers) => PlayersOfServer(serverId, nplayers)
+      })
+    }
   }
 
 
