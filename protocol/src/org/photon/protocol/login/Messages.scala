@@ -153,13 +153,28 @@ object PlayerListMessage extends DofusDeserializer {
 }
 
 case class ServerSelectionRequestMessage(serverId: Int) extends DofusMessage {
-    def definition = ServerSelectionRequestMessage
-    def serialize(out: Out) = out ++= serverId.toString
+  def definition = ServerSelectionRequestMessage
+  def serialize(out: Out) = out ++= serverId.toString
 }
 
 object ServerSelectionRequestMessage extends DofusDeserializer {
-    val opcode = "AX"
-    def deserialize(in: In) = try Some(ServerSelectionRequestMessage(in.toInt)) catch {
-      case _: NumberFormatException => None
-    }
+  val opcode = "AX"
+  def deserialize(in: In) = try Some(ServerSelectionRequestMessage(in.toInt)) catch {
+    case _: NumberFormatException => None
+  }
+}
+
+case class ServerSelectionMessage(address: String, port: Int, ticket: String) extends DofusMessage {
+  def definition = ServerSelectionMessage
+  def serialize(out: Out) = out ++= s"$address:$port;$ticket"
+}
+
+object ServerSelectionMessage extends DofusDeserializer {
+  val opcode = "AYK"
+  def deserialize(in: In) = None
+}
+
+case object ServerSelectionErrorMessage extends DofusStaticMessage {
+  val opcode = "AYE"
+  val data = ""
 }
