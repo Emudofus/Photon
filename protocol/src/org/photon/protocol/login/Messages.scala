@@ -151,3 +151,15 @@ object PlayerListMessage extends DofusDeserializer {
   val opcode = "AxK"
   def deserialize(in: In) = None
 }
+
+case class ServerSelectionRequestMessage(serverId: Int) extends DofusMessage {
+    def definition = ServerSelectionRequestMessage
+    def serialize(out: Out) = out ++= serverId.toString
+}
+
+object ServerSelectionRequestMessage extends DofusDeserializer {
+    val opcode = "AX"
+    def deserialize(in: In) = try Some(ServerSelectionRequestMessage(in.toInt)) catch {
+      case _: NumberFormatException => None
+    }
+}

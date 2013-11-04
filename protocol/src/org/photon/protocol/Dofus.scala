@@ -1,6 +1,6 @@
 package org.photon.protocol
 
-import org.photon.protocol.login.{PlayerListRequestMessage, QueueStatusRequestMessage}
+import org.photon.protocol.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder
@@ -31,6 +31,7 @@ object DofusProtocol {
 
   val deserializers: Map[String, DofusDeserializer] = Map(
     QueueStatusRequestMessage.opcode -> QueueStatusRequestMessage,
-    PlayerListRequestMessage.opcode -> PlayerListRequestMessage
+    PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
+    ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage
   )
 }
