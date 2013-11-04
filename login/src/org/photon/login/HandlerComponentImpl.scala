@@ -5,11 +5,13 @@ import org.photon.protocol.login._
 import com.typesafe.scalalogging.slf4j.Logging
 import com.twitter.util.{Future, Throw, Return}
 
-trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAuthenticationComponent =>
+trait HandlerComponentImpl extends HandlerComponent with Logging {
+  self: UserAuthenticationComponent with RealmManagerComponent =>
+
   import HandlerComponent._
   import org.photon.login.NetworkSession._
 
-  val connections: NetworkHandler = {
+  def connections: NetworkHandler = {
     case Connect(s) =>
       s ! HelloConnectMessage(s.ticket)
 
@@ -17,7 +19,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
   }
 
 
-  val versionHandler: NetworkHandler = {
+  def versionHandler: NetworkHandler = {
     case Message(s, VersionMessage(DofusProtocol.version)) =>
       s.state = AuthenticationState
       Future.Done
@@ -29,7 +31,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
   }
 
 
-  val authHandler: NetworkHandler = {
+  def authHandler: NetworkHandler = {
     case Message(s, AuthenticationMessage(username, password)) =>
       require(s.userOption.isEmpty, s"expected a non-logged client ${s.remoteAddress}")
 
@@ -56,9 +58,13 @@ trait HandlerComponentImpl extends HandlerComponent with Logging { self: UserAut
   }
 
 
-  val realmHandler: NetworkHandler = {
+  def realmHandler: NetworkHandler = {
     case Message(s, QueueStatusRequestMessage) => Future.Done
-    case Message(s, ServerListRequestMessage) => Future.Done
+
+    case Message(s, ServerListRequestMessage) =>
+      realmManager.onlineServers
+        .map(ServerListMessage(_))
+        .flatMap(s ! _)
   }
 
 

@@ -11,6 +11,7 @@ object LoginServer {
       with UserRepositoryComponentImpl
       with UserAuthenticationComponentImpl
       with NetworkComponentImpl
+      with RealmManagerComponentImpl
       with HandlerComponentImpl
     {
       lazy val config = ConfigFactory.load()
