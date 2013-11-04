@@ -1,13 +1,12 @@
 package org.photon.login
 
-import com.twitter.util.Future
+import com.twitter.util.{Time, Future}
 import org.photon.common.BaseRepository
 import java.sql.{PreparedStatement, ResultSet}
 
 trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: DatabaseComponent with ExecutorComponent =>
 
   class UserRepositoryImpl extends BaseRepository[User] with UserRepository {
-    import org.photon.common.JodaConversion._
 
     implicit val executor = self.executor
     implicit val connection = self.database
@@ -23,7 +22,7 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
       rset.getString("secret_question"),
       rset.getString("secret_answer"),
       rset.getInt("community_id"),
-      rset.getTimestamp("subscription_end"),
+      Time(rset.getTimestamp("subscription_end")),
       persisted = true
     )
 
@@ -34,7 +33,7 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
       s.setString(4, o.secretQuestion)
       s.setString(5, o.secretAnswer)
       s.setInt(6, o.communityId)
-      s.setTimestamp(7, o.subscriptionEnd)
+      s.setTimestamp(7, new java.sql.Timestamp(o.subscriptionEnd.inMicroseconds))
     }
 
     protected def setPrimaryKey(s: PreparedStatement) = s.setLong

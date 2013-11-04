@@ -13,3 +13,8 @@ case class Server(id: Int, state: ServerState.ServerState, completion: Int, join
 
   def serialize(out: Out) = out ++= s"$id;${state.id};$completion;${if (joinable) "1" else "0"}"
 }
+
+case class PlayersOfServer(serverId: Int, nplayers: Int) extends StringSerializable {
+
+  def serialize(out: Out) = out ++= s"$serverId,$nplayers"
+}

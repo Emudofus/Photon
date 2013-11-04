@@ -1,7 +1,6 @@
 package org.photon.login
 
-import com.twitter.util.Future
-import org.joda.time.Instant
+import com.twitter.util.{Time, Future}
 import org.photon.common.{Repository, Model}
 
 case class User(
@@ -12,7 +11,7 @@ case class User(
   secretQuestion: String,
   secretAnswer: String,
   communityId: Int,
-  subscriptionEnd: Instant,
+  subscriptionEnd: Time,
   persisted: Boolean = false
 ) extends Model[User] {
   type PrimaryKey = Long

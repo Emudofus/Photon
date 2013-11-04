@@ -1,6 +1,7 @@
 package org.photon.protocol.login
 
 import org.photon.protocol._
+import com.twitter.util.Time
 
 case class VersionMessage(version: String) extends DofusMessage {
   def definition = VersionMessage
@@ -133,5 +134,20 @@ case class ServerListMessage(servers: Seq[Server]) extends DofusMessage {
 
 object ServerListMessage extends DofusDeserializer {
   val opcode = "AH"
+  def deserialize(in: In) = None
+}
+
+case class PlayerListMessage(subscriptionEnd: Time, players: Seq[PlayersOfServer]) extends DofusMessage {
+  import Test._
+
+  def definition = PlayerListMessage
+  def serialize(out: Out) {
+    out ++= subscriptionEnd.untilNow.inMilliseconds.toString
+    players.serialize(out, start = "|", sep = "|")
+  }
+}
+
+object PlayerListMessage extends DofusDeserializer {
+  val opcode = "AxK"
   def deserialize(in: In) = None
 }

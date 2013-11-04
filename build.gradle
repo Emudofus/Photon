@@ -10,7 +10,6 @@ allprojects {
 
     dependencies {
 	    compile "org.scala-lang:scala-library:${scalaStdlibVersion}"
-        compile "com.github.nscala-time:nscala-time_${scalaVersion}:${nscalaTimeVersion}"
         compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
         compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
     }
