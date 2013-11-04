@@ -118,7 +118,9 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
           serialize(msg)
       }
 
-      builder.result()
+      val res = builder.result()
+      logger.trace(s"send [${res.length}] $res to ${session.getRemoteAddress}")
+      res
     }
   }
 
