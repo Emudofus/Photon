@@ -109,3 +109,13 @@ case object ServerListRequestMessage extends DofusStaticMessage {
   val opcode = "Ax"
   val data = ""
 }
+
+case class ServerListMessage(servers: Seq[Server]) extends DofusMessage {
+  def definition = ServerListMessage
+  def serialize(out: Out) = servers.addString(out, "|")
+}
+
+object ServerListMessage extends DofusDeserializer {
+  val opcode = "AH"
+  def deserialize(in: In) = None
+}
