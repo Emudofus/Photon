@@ -105,7 +105,7 @@ object AuthenticationSuccessMessage extends DofusDeserializer {
   def deserialize(in: In) = Some(AuthenticationSuccessMessage(in == "1"))
 }
 
-case object ServerListRequestMessage extends DofusStaticMessage {
+case object PlayerListRequestMessage extends DofusStaticMessage {
   val opcode = "Ax"
   val data = ""
 }
