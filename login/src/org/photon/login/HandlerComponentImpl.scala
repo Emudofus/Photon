@@ -40,12 +40,15 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
           s.state = ServerSelectionState
           s.userOption = Some(user)
 
-          s transaction (
-            SetNicknameMessage(user.nickname),
-            SetCommunityMessage(user.communityId),
-            SetSecretQuestion(user.secretQuestion),
-            AuthenticationSuccessMessage(hasRights = false)
-          )
+          realmManager.onlineServers flatMap {
+            servers => s.transaction(
+              SetNicknameMessage(user.nickname),
+              SetCommunityMessage(user.communityId),
+              SetSecretQuestion(user.secretQuestion),
+              AuthenticationSuccessMessage(hasRights = false),
+              ServerListMessage(servers)
+            )
+          }
 
         case Throw(BannedUserException()) =>        s !! BannedUserMessage
         case Throw(AlreadyConnectedException()) =>  s !! AlreadyConnectedMessage
@@ -61,10 +64,7 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
   def realmHandler: NetworkHandler = {
     case Message(s, QueueStatusRequestMessage) => Future.Done
 
-    case Message(s, ServerListRequestMessage) =>
-      realmManager.onlineServers
-        .map(ServerListMessage(_))
-        .flatMap(s ! _)
+    case Message(s, PlayerListRequestMessage) => Future.Done
   }
 
 
