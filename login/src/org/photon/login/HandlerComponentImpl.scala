@@ -69,6 +69,11 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
         case (serverId, nplayers) => PlayersOfServer(serverId, nplayers)
       })
     }
+
+    case Message(s, ServerSelectionRequestMessage(serverId)) => realmManager.find(serverId) match {
+      case Some(realm) => s ! ServerSelectionMessage(realm.address, realm.port, s.ticket)
+      case None => s !! ServerSelectionErrorMessage
+    }
   }
 
 

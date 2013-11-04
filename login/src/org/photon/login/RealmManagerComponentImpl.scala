@@ -12,6 +12,8 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     ))
 
     def playerList(user: User): Future[Seq[(Int, Int)]] = Future(Seq(1 -> 1))
+
+    def find(serverId: Int): Option[RealmServer] = None
   }
 
   val realmManager = new RealmManagerImpl
