@@ -2,14 +2,19 @@ package org.photon.protocol
 
 import org.photon.protocol.login.{ServerListRequestMessage, QueueStatusRequestMessage}
 
-trait DofusMessage extends Message with Serializable {
+trait StringSerializable extends Serializable {
   type Out = StringBuilder
+}
 
+trait StringDeserializer extends Deserializer {
+  type In = String
+}
+
+trait DofusMessage extends Message with StringSerializable {
   override def definition: DofusDeserializer
 }
 
-trait DofusDeserializer extends MessageDefinition with Deserializer {
-  type In = String
+trait DofusDeserializer extends MessageDefinition with StringDeserializer {
   type Opcode = String
 }
 

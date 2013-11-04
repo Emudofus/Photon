@@ -27,3 +27,4 @@ out/
 /incoming-distributions
 .idea
 *.sublime-*
+login/src/application.conf

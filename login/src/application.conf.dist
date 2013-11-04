@@ -5,6 +5,8 @@ photon {
             charset = UTF-8
             max-frame-length = 1024
         }
+	realm {
+	}
     }
 
     database {
