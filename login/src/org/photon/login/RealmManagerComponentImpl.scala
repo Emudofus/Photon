@@ -16,9 +16,6 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 import org.photon.protocol.photon._
 import scala.Some
-import org.photon.protocol.photon.AuthSuccessMessage
-import org.photon.protocol.photon.HelloConnectMessage
-import org.photon.protocol.photon.AuthMessage
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>
@@ -74,9 +71,16 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     }
 
     def grantAccess(user: User, ticket: String) = grantAccessRequests.get(user.id) getOrElse {
+      val userInfos = UserInfos(
+        user.id,
+        user.nickname,
+        user.secretAnswer,
+        user.subscriptionEnd
+      )
+
       val p = Promise[Unit]
       grantAccessRequests(user.id) = p
-      (session ! GrantAccessMessage(user.id, ticket)) flatMap { _ => p }
+      (session ! GrantAccessMessage(userInfos, ticket)) flatMap { _ => p }
     }
   }
 

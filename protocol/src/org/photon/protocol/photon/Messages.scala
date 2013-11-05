@@ -19,6 +19,6 @@ case class PlayerListMessage(userId: Long) extends Message
 case class PlayerListSuccessMessage(userId: Long, nplayers: Int) extends Message
 case class PlayerListErrorMessage(userId: Long) extends Message
 
-case class GrantAccessMessage(userId: Long, ticket: String) extends Message
+case class GrantAccessMessage(userInfos: UserInfos, ticket: String) extends Message
 case class GrantAccessSuccessMessage(userId: Long) extends Message
 case class GrantAccessErrorMessage(userId: Long) extends Message
