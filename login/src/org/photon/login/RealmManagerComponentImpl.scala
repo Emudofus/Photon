@@ -27,6 +27,12 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     }
   }
 
+  class RealmServerImpl(val address: String, val port: Int, var infosOption: Option[Server]) extends RealmServer {
+    def infos = infosOption.get
+
+    def grantAccess(user: User, ticket: String) = Future.exception(throw GrantAccessException())
+  }
+
   val realmManager = new RealmManagerImpl
   services += realmManager
 }

@@ -69,7 +69,18 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
     }
 
     case Message(s, ServerSelectionRequestMessage(serverId)) => realmManager.find(serverId) match {
-      case Some(realm) => s ! ServerSelectionMessage(realm.address, realm.port, s.ticket)
+      case Some(realm) => realm.grantAccess(s.user, s.ticket) transform {
+        case Return(_) => s ! ServerSelectionMessage(realm.address, realm.port, s.ticket)
+
+        case Throw(GrantAccessException()) =>
+          logger.error(s"${s.remoteAddress} was not allowed to switch to ${realm.infos.id}")
+          s ! ServerSelectionErrorMessage
+
+        case Throw(ex) =>
+          logger.error(s"${s.remoteAddress} can not switch to ${realm.infos.id}", ex)
+          Future.exception(ex)
+      }
+
       case None => s !! ServerSelectionErrorMessage
     }
   }

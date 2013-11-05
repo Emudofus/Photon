@@ -6,6 +6,9 @@ import org.photon.protocol.login.{PlayersOfServer, Server}
 trait RealmServer {
   def address: String
   def port: Int
+  def infos: Server
+
+  def grantAccess(user: User, ticket: String): Future[Unit]
 }
 
 trait RealmManager extends Service {
@@ -15,6 +18,8 @@ trait RealmManager extends Service {
 }
 
 trait RealmManagerComponent { self: ConfigurationComponent =>
+  sealed abstract class RealmAccessException extends RuntimeException
+  case class GrantAccessException() extends RealmAccessException
 
   val realmManagerConfig = config.getConfig("photon.network.realm")
 
