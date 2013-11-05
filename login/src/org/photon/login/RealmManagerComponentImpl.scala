@@ -1,7 +1,7 @@
 package org.photon.login
 
-import com.twitter.util.Future
-import org.photon.protocol.dofus.login.{Server, ServerState}
+import com.twitter.util.{Promise, Future}
+import org.photon.protocol.dofus.login.{PlayersOfServer, Server, ServerState}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
@@ -14,15 +14,21 @@ import org.apache.mina.core.write.WriteRequest
 import org.apache.mina.core.filterchain.IoFilterAdapter
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
+import org.photon.protocol.photon._
+import scala.Some
+import org.photon.protocol.photon.AuthSuccessMessage
+import org.photon.protocol.photon.HelloConnectMessage
+import org.photon.protocol.photon.AuthMessage
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>
   import scala.collection.JavaConversions._
+  import MinaConversion._
 
   val realmManager = new RealmManagerImpl
   services += realmManager
 
-  private val realmServerSessionAttributeKey = "photon.network.realm.session"
+  implicit private val realmServerSessionAttributeKey = Attr[RealmServerImpl]
 
   class RealmManagerImpl extends RealmManager with Logging {
     val servers = mutable.Map.empty[Int, RealmServerImpl]
@@ -53,13 +59,25 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
   }
 
   class RealmServerImpl(val address: String, val port: Int, session: IoSession) extends RealmServer {
+    private[RealmManagerComponentImpl] val playerListRequests = mutable.Map.empty[Long, Promise[PlayersOfServer]]
+    private[RealmManagerComponentImpl] val grantAccessRequests = mutable.Map.empty[Long, Promise[Unit]]
+
     var infosOption: Option[Server] = None
     def infos = infosOption.get
 
     def isAvailable = infos.state == ServerState.online
 
-    def fetchPlayers(user: User) = ???
-    def grantAccess(user: User, ticket: String) = ???
+    def fetchPlayers(user: User) = playerListRequests.get(user.id) getOrElse {
+      val p = Promise[PlayersOfServer]
+      playerListRequests(user.id) = p
+      (session ! PlayerListMessage(user.id)) flatMap { _ => p }
+    }
+
+    def grantAccess(user: User, ticket: String) = grantAccessRequests.get(user.id) getOrElse {
+      val p = Promise[Unit]
+      grantAccessRequests(user.id) = p
+      (session ! GrantAccessMessage(user.id, ticket)) flatMap { _ => p }
+    }
   }
 
   class RealmManagerLoggingImpl extends IoFilterAdapter with Logging {
@@ -76,15 +94,58 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
 
   class RealmManagerHandlerImpl extends IoHandlerAdapter {
     override def sessionOpened(session: IoSession) {
-
+      handle(Connect(session))
     }
 
     override def sessionClosed(session: IoSession) {
-
+      handle(Disconnect(session))
     }
 
     override def messageReceived(session: IoSession, message: Any) {
-      val realm = Option(session.getAttribute(realmServerSessionAttributeKey).asInstanceOf[RealmServerImpl])
+      handle(Message(session, message))
     }
+  }
+
+  protected sealed trait Req
+  protected case class Connect(s: IoSession) extends Req
+  protected case class Disconnect(s: IoSession) extends Req
+  protected case class Message(s: IoSession, o: Any) extends Req
+  protected type RealmServerHandler = PartialFunction[Req, Future[_]]
+
+  protected def handle: RealmServerHandler = {
+    case Connect(s) => s ! HelloConnectMessage()
+
+    case Disconnect(s) => Future.Done
+
+    case Message(s, AuthMessage()) => ???
+
+    case Message(s, InfosUpdateMessage(infos)) =>
+      s.attr[RealmServerImpl].get.infosOption = Some(infos)
+      s ! Ack
+
+    case Message(s, StateUpdateMessage(state)) =>
+      val realm = s.attr[RealmServerImpl].get
+      realm.infosOption = Some(realm.infos.copy(state = state))
+      s ! Ack
+
+    case Message(s, PlayerListSuccessMessage(userId, nplayers)) =>
+      val realm = s.attr[RealmServerImpl].get
+      realm.playerListRequests.remove(userId) foreach (_ setValue PlayersOfServer(realm.infos.id, nplayers))
+      Future.Done
+
+    case Message(s, PlayerListErrorMessage(userId)) =>
+      s.attr[RealmServerImpl].get.playerListRequests
+          .remove(userId) foreach (_ setException PlayerListException())
+      Future.Done
+
+    case Message(s, GrantAccessSuccessMessage(userId)) =>
+      s.attr[RealmServerImpl].get.grantAccessRequests
+          .remove(userId) foreach (_.setDone())
+      Future.Done
+
+    case Message(s, GrantAccessErrorMessage(userId)) =>
+      s.attr[RealmServerImpl].get.grantAccessRequests
+          .remove(userId) foreach (_ setException GrantAccessException())
+      Future.Done
   }
 }

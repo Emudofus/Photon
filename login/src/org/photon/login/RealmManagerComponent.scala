@@ -21,6 +21,7 @@ trait RealmManager extends Service {
 
 trait RealmManagerComponent { self: ConfigurationComponent =>
   sealed abstract class RealmAccessException extends RuntimeException
+  case class PlayerListException() extends RealmAccessException
   case class GrantAccessException() extends RealmAccessException
 
   val realmManagerConfig = config.getConfig("photon.network.realm")
