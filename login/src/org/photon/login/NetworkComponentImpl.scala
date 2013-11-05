@@ -12,11 +12,11 @@ import org.apache.mina.filter.codec.textline.TextLineCodecFactory
 import org.apache.mina.core.filterchain.IoFilterAdapter
 import org.apache.mina.core.filterchain.IoFilter.NextFilter
 import org.apache.mina.core.write.WriteRequest
-import org.photon.protocol.login.{AuthenticationMessage, VersionMessage}
-import org.photon.protocol.{DofusMessage, DofusProtocol}
+import org.photon.protocol.dofus.login.{AuthenticationMessage, VersionMessage}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.mina.filter.util.WriteRequestFilter
 import java.util.Random
+import org.photon.protocol.dofus.{DofusProtocol, DofusMessage}
 
 trait NetworkComponentImpl extends NetworkComponent {
   self: ConfigurationComponent with ExecutorComponent with HandlerComponent with ServiceManagerComponent =>

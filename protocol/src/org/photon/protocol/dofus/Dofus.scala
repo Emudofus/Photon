@@ -1,6 +1,7 @@
-package org.photon.protocol
+package org.photon.protocol.dofus
 
-import org.photon.protocol.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
+import org.photon.protocol.dofus.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
+import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializable}
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder

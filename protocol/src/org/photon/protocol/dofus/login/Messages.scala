@@ -1,7 +1,8 @@
-package org.photon.protocol.login
+package org.photon.protocol.dofus.login
 
-import org.photon.protocol._
+import org.photon.protocol.dofus._
 import com.twitter.util.Time
+import scala.Some
 
 case class VersionMessage(version: String) extends DofusMessage {
   def definition = VersionMessage

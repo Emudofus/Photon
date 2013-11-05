@@ -1,7 +1,7 @@
 package org.photon.login
 
 import com.twitter.util.Future
-import org.photon.protocol.login.{PlayersOfServer, Server}
+import org.photon.protocol.dofus.login.{PlayersOfServer, Server}
 
 trait RealmServer {
   def address: String

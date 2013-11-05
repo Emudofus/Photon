@@ -1,10 +1,10 @@
 package org.photon.login
 
-import org.photon.protocol.DofusProtocol
-import org.photon.protocol.login._
+import org.photon.protocol.dofus.login._
 import com.typesafe.scalalogging.slf4j.Logger
 import com.twitter.util.{Future, Throw, Return}
 import org.slf4j.LoggerFactory
+import org.photon.protocol.dofus.DofusProtocol
 
 trait HandlerComponentImpl extends HandlerComponent {
   self: UserAuthenticationComponent with RealmManagerComponent =>

@@ -1,6 +1,6 @@
-package org.photon.protocol.login
+package org.photon.protocol.dofus.login
 
-import org.photon.protocol.StringSerializable
+import org.photon.protocol.dofus.StringSerializable
 
 object ServerState extends Enumeration {
   type ServerState = Value

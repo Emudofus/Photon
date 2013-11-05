@@ -1,7 +1,7 @@
 package org.photon.login
 
 import com.twitter.util.Future
-import org.photon.protocol.login.{Server, ServerState}
+import org.photon.protocol.dofus.login.{Server, ServerState}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
