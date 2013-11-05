@@ -4,6 +4,7 @@ mainClassName = 'org.photon.login.LoginServer'
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
     compile "ch.qos.logback:logback-classic:${logbackVersion}"
+    runtime "org.codehaus.groovy:groovy:${groovyVersion}" // required to configure through Groovy DSL
     compile "org.apache.mina:mina-core:${minaVersion}"
     runtime jdbcConnector
 

@@ -28,3 +28,7 @@ out/
 .idea
 *.sublime-*
 login/src/application.conf
+login/src/application.json
+login/src/application.properties
+login/src/logback.groovy
+login/src/logback.xml
