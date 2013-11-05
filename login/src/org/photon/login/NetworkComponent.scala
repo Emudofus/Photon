@@ -51,9 +51,7 @@ object NetworkSession {
   case object ServerSelectionState extends State
 }
 
-trait NetworkService {
-  def boot(): Future[NetworkService]
-  def kill(): Future[NetworkService]
+trait NetworkService extends Service {
   def connected: Seq[NetworkSession]
 }
 

@@ -18,11 +18,13 @@ import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.mina.filter.util.WriteRequestFilter
 import java.util.Random
 
-trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationComponent with ExecutorComponent with HandlerComponent =>
+trait NetworkComponentImpl extends NetworkComponent {
+  self: ConfigurationComponent with ExecutorComponent with HandlerComponent with ServiceManagerComponent =>
   import MinaConversion._
   import scala.collection.JavaConversions._
 
   val networkService = new NetworkServiceImpl
+  services += networkService
 
   private val networkSessionAttributeKey = "photon.network.login.session"
 
@@ -42,7 +44,6 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
       acceptor.bind()
       logger.debug(s"listening on $networkPort")
       logger.info("successfully booted")
-      this
     }
 
     def kill() = Async {
@@ -51,8 +52,6 @@ trait NetworkComponentImpl extends NetworkComponent { self: ConfigurationCompone
       acceptor.dispose()
 
       logger.info("successfully killed")
-
-      this
     }
   }
 

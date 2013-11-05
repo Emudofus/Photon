@@ -1,16 +1,13 @@
 package org.photon.login
 
 import com.typesafe.config.ConfigFactory
-import com.twitter.util.JavaTimer
+import com.twitter.util.{Future, Await, JavaTimer}
 
 object LoginServer {
   def main(args: Array[String]) {
-    import com.twitter.util.TimeConversions._
-
-    implicit val timer = new JavaTimer(false)
-
     val component = new Object
       with ConfigurationComponent
+      with ServiceManagerComponent
       with ExecutorComponentImpl
       with DatabaseComponentImpl
       with UserRepositoryComponentImpl
@@ -20,10 +17,15 @@ object LoginServer {
       with HandlerComponentImpl
     {
       lazy val config = ConfigFactory.load()
+      lazy val services = Seq.newBuilder[Service]
     }
 
-    component.networkService.boot().within(1 second) onSuccess { s =>
-      sys.addShutdownHook { s.kill() }
+    val services = component.services.result()
+
+    Future.collect(services map {_.boot()}) onSuccess { _ =>
+      sys.addShutdownHook {
+        Await result Future.collect(services map {_.kill()})
+      }
     }
   }
 }

@@ -8,7 +8,7 @@ trait RealmServer {
   def port: Int
 }
 
-trait RealmManager {
+trait RealmManager extends Service {
   def onlineServers: Future[Seq[Server]]
   def playerList(user: User): Future[Seq[(Int, Int)]]
   def find(serverId: Int): Option[RealmServer]
