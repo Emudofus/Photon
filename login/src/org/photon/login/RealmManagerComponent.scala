@@ -1,7 +1,7 @@
 package org.photon.login
 
 import com.twitter.util.Future
-import org.photon.protocol.login.Server
+import org.photon.protocol.login.{PlayersOfServer, Server}
 
 trait RealmServer {
   def address: String
@@ -10,7 +10,7 @@ trait RealmServer {
 
 trait RealmManager extends Service {
   def onlineServers: Future[Seq[Server]]
-  def playerList(user: User): Future[Seq[(Int, Int)]]
+  def playerList(user: User): Future[Seq[PlayersOfServer]]
   def find(serverId: Int): Option[RealmServer]
 }
 

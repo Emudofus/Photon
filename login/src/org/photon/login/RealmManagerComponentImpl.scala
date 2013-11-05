@@ -1,7 +1,7 @@
 package org.photon.login
 
 import com.twitter.util.Future
-import org.photon.protocol.login.{Server, ServerState}
+import org.photon.protocol.login.{PlayersOfServer, Server, ServerState}
 import com.typesafe.scalalogging.slf4j.Logging
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
@@ -12,7 +12,7 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
       Server(1, ServerState.online, 0, joinable = true) // TODO
     ))
 
-    def playerList(user: User): Future[Seq[(Int, Int)]] = Future(Seq(1 -> 1))
+    def playerList(user: User): Future[Seq[PlayersOfServer]] = Future(Seq(PlayersOfServer(1, 1)))
 
     def find(serverId: Int): Option[RealmServer] = None
 
