@@ -1,7 +1,8 @@
 package org.photon.login
 
 import com.typesafe.config.ConfigFactory
-import com.twitter.util.{Future, Await, JavaTimer}
+import com.twitter.util.{Future, Await}
+import java.io.File
 
 object LoginServer {
   def main(args: Array[String]) {
@@ -16,7 +17,11 @@ object LoginServer {
       with RealmManagerComponentImpl
       with HandlerComponentImpl
     {
-      lazy val config = ConfigFactory.load()
+      lazy val config = sys.props.get("photon.config")
+        .map { file => ConfigFactory.parseFile(new File(file)) }
+        .getOrElse(ConfigFactory.empty())
+        .withFallback(ConfigFactory.load())
+
       lazy val services = Seq.newBuilder[Service]
     }
 
