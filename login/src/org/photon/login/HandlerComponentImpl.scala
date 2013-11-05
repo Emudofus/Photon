@@ -2,14 +2,17 @@ package org.photon.login
 
 import org.photon.protocol.DofusProtocol
 import org.photon.protocol.login._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.Logger
 import com.twitter.util.{Future, Throw, Return}
+import org.slf4j.LoggerFactory
 
-trait HandlerComponentImpl extends HandlerComponent with Logging {
+trait HandlerComponentImpl extends HandlerComponent {
   self: UserAuthenticationComponent with RealmManagerComponent =>
 
   import HandlerComponent._
   import org.photon.login.NetworkSession._
+
+  private val logger = Logger(LoggerFactory getLogger classOf[HandlerComponentImpl])
 
   def connections: NetworkHandler = {
     case Connect(s) =>
@@ -40,15 +43,13 @@ trait HandlerComponentImpl extends HandlerComponent with Logging {
           s.state = ServerSelectionState
           s.userOption = Some(user)
 
-          realmManager.onlineServers flatMap {
-            servers => s.transaction(
-              SetNicknameMessage(user.nickname),
-              SetCommunityMessage(user.communityId),
-              SetSecretQuestion(user.secretQuestion),
-              AuthenticationSuccessMessage(hasRights = false),
-              ServerListMessage(servers)
-            )
-          }
+          s.transaction(
+            SetNicknameMessage(user.nickname),
+            SetCommunityMessage(user.communityId),
+            SetSecretQuestion(user.secretQuestion),
+            AuthenticationSuccessMessage(hasRights = false),
+            ServerListMessage(realmManager.availableServers)
+          )
 
         case Throw(BannedUserException()) =>        s !! BannedUserMessage
         case Throw(AlreadyConnectedException()) =>  s !! AlreadyConnectedMessage
