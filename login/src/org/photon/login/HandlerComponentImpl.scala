@@ -5,6 +5,7 @@ import com.typesafe.scalalogging.slf4j.Logger
 import com.twitter.util.{Future, Throw, Return}
 import org.slf4j.LoggerFactory
 import org.photon.protocol.dofus.DofusProtocol
+import org.photon.common.Event
 
 trait HandlerComponentImpl extends HandlerComponent {
   self: UserAuthenticationComponent with RealmManagerComponent =>
@@ -18,7 +19,9 @@ trait HandlerComponentImpl extends HandlerComponent {
     case Connect(s) =>
       s ! HelloConnectMessage(s.ticket)
 
-    case Disconnect(s) => Future.Done
+    case Disconnect(s) =>
+      s.subscriptions.unsubscribe(realmManager.updated)
+      Future.Done
   }
 
 
@@ -42,6 +45,7 @@ trait HandlerComponentImpl extends HandlerComponent {
         case Return(user) =>
           s.state = ServerSelectionState
           s.userOption = Some(user)
+          s.subscriptions(realmManager.updated) = realmServerUpdated(s)
 
           s.transaction(
             SetNicknameMessage(user.nickname),
@@ -59,6 +63,12 @@ trait HandlerComponentImpl extends HandlerComponent {
           logger.error(s"can't authenticate ${s.remoteAddress}", ex)
           Future.exception(ex)
       }
+  }
+
+
+  def realmServerUpdated(s: NetworkSession): Event.UnitListener = {
+    case realm: RealmServer =>
+      s ! ServerListMessage(Seq(realm.infos))
   }
 
 

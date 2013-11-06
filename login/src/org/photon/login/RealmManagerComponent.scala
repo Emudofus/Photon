@@ -2,6 +2,7 @@ package org.photon.login
 
 import com.twitter.util.Future
 import org.photon.protocol.dofus.login.{PlayersOfServer, Server}
+import org.photon.common.Event
 
 trait RealmServer {
   def address: String
@@ -14,6 +15,8 @@ trait RealmServer {
 }
 
 trait RealmManager extends Service {
+  def updated: Event
+
   def availableServers: Seq[Server]
   def playerList(user: User): Future[Seq[PlayersOfServer]]
   def find(serverId: Int): Option[RealmServer]

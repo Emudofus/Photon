@@ -4,7 +4,7 @@ import com.twitter.util.Future
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
 import java.net.InetSocketAddress
-import org.photon.common.{Strings, Async}
+import org.photon.common.{EventSubscriptionBag, Strings, Async}
 import scala.collection.mutable
 import org.apache.mina.core.service.IoHandlerAdapter
 import org.apache.mina.filter.codec._
@@ -60,6 +60,7 @@ trait NetworkComponentImpl extends NetworkComponent {
 
     var state: State = VersionCheckState
     var userOption: Option[User] = None
+    val subscriptions = EventSubscriptionBag.empty
 
     def service = networkService
     val closeFuture = session.getCloseFuture.toTw(this)
