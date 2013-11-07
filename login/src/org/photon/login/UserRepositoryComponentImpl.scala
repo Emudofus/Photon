@@ -3,6 +3,7 @@ package org.photon.login
 import com.twitter.util.{Time, Future}
 import org.photon.common.BaseRepository
 import java.sql.{PreparedStatement, ResultSet}
+import org.photon.common.components.{ExecutorComponent, DatabaseComponent}
 
 trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: DatabaseComponent with ExecutorComponent =>
 

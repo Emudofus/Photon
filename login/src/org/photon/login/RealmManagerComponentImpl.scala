@@ -16,6 +16,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 import org.photon.protocol.photon._
 import scala.Some
+import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>

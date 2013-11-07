@@ -3,6 +3,7 @@ package org.photon.login
 import com.twitter.util.Future
 import org.photon.protocol.dofus.login.{PlayersOfServer, Server}
 import org.photon.common.Observable
+import org.photon.common.components.Service
 
 trait RealmServer {
   def address: String

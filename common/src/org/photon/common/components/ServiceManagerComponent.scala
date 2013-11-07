@@ -1,4 +1,4 @@
-package org.photon.login
+package org.photon.common.components
 
 import com.twitter.util.Future
 import scala.collection.mutable

@@ -17,6 +17,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.mina.filter.util.WriteRequestFilter
 import java.util.Random
 import org.photon.protocol.dofus.{DofusProtocol, DofusMessage}
+import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
 
 trait NetworkComponentImpl extends NetworkComponent {
   self: ConfigurationComponent with ExecutorComponent with HandlerComponent with ServiceManagerComponent =>

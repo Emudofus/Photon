@@ -3,6 +3,7 @@ package org.photon.login
 import com.typesafe.config.ConfigFactory
 import com.twitter.util.{Future, Await}
 import java.io.File
+import org.photon.common.components._
 
 object LoginServer {
   def main(args: Array[String]) {
@@ -21,6 +22,9 @@ object LoginServer {
         .map { file => ConfigFactory.parseFile(new File(file)) }
         .getOrElse(ConfigFactory.empty())
         .withFallback(ConfigFactory.load())
+
+      lazy val databaseUrl = config.getString("photon.database.url")
+      lazy val databaseDriver = config.getString("photon.database.driver")
 
       lazy val services = Seq.newBuilder[Service]
     }

@@ -6,6 +6,7 @@ import java.net.SocketAddress
 import scala.collection.mutable
 import scala.annotation.tailrec
 import org.photon.common.Observable
+import org.photon.common.components.Service
 
 trait NetworkSession {
   import NetworkSession._

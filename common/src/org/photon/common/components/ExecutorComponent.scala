@@ -1,4 +1,4 @@
-package org.photon.login
+package org.photon.common.components
 
 import java.util.concurrent.ExecutorService
 
