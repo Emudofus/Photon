@@ -1,2 +1,13 @@
 apply plugin: 'application'
-mainClassName = 'TODO'
+mainClassName = 'org.photon.realm.RealmServer'
+
+dependencies {
+    compile "com.typesafe:config:${typesafeConfigVersion}"
+    compile "ch.qos.logback:logback-classic:${logbackVersion}"
+    runtime "org.codehaus.groovy:groovy:${groovyVersion}" // required to configure through Groovy DSL
+    compile "org.apache.mina:mina-core:${minaVersion}"
+    runtime jdbcConnector
+
+    compile project(":common")
+    compile project(":protocol")
+}
