@@ -5,7 +5,7 @@ import org.photon.protocol.dofus.login.{PlayersOfServer, Server, ServerState}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
-import org.photon.common.{Event, Async}
+import org.photon.common.Async
 import java.net.InetSocketAddress
 import org.apache.mina.core.service.IoHandlerAdapter
 import org.apache.mina.core.filterchain.IoFilter.NextFilter
@@ -37,7 +37,6 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     acceptor.getFilterChain.addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory))
     acceptor.getFilterChain.addLast("logging", new RealmManagerLoggingImpl)
 
-    val updated = Event.newEvent
     def find(serverId: Int) = servers.get(serverId)
     def availableServers = servers.values.toStream filter (_.isAvailable) map (_.infos)
     def playerList(user: User) = Future collect (servers.values.toSeq map (_.fetchPlayers(user)))
@@ -127,12 +126,14 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     case Message(s, InfosUpdateMessage(infos)) =>
       val realm = s.attr[RealmServerImpl].get
       realm.infosOption = Some(infos)
-      realmManager.updated(realm) flatMap { _ => s ! Ack }
+      realmManager.emit('updated, realm)
+      s ! Ack
 
     case Message(s, StateUpdateMessage(state)) =>
       val realm = s.attr[RealmServerImpl].get
       realm.infosOption = Some(realm.infos.copy(state = state))
-      realmManager.updated(realm) flatMap { _ => s ! Ack }
+      realmManager.emit('updated, realm)
+      s ! Ack
 
     case Message(s, PlayerListSuccessMessage(userId, nplayers)) =>
       val realm = s.attr[RealmServerImpl].get

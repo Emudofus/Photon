@@ -5,16 +5,16 @@ import java.nio.charset.Charset
 import java.net.SocketAddress
 import scala.collection.mutable
 import scala.annotation.tailrec
-import org.photon.common.EventSubscriptionBag
+import org.photon.common.Observable
 
 trait NetworkSession {
   import NetworkSession._
 
   var state: State
+  var realmUpdatedLid: Option[Observable.Lid]
   var userOption: Option[User]
   def user = userOption.get
   def ticket: String
-  def subscriptions: EventSubscriptionBag
 
   def service: NetworkService
   def closeFuture: Future[NetworkSession]

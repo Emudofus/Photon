@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.slf4j.Logger
 import com.twitter.util.{Future, Throw, Return}
 import org.slf4j.LoggerFactory
 import org.photon.protocol.dofus.DofusProtocol
-import org.photon.common.Event
+import org.photon.common.Observable
 
 trait HandlerComponentImpl extends HandlerComponent {
   self: UserAuthenticationComponent with RealmManagerComponent =>
@@ -20,7 +20,8 @@ trait HandlerComponentImpl extends HandlerComponent {
       s ! HelloConnectMessage(s.ticket)
 
     case Disconnect(s) =>
-      s.subscriptions.unsubscribe(realmManager.updated)
+      s.realmUpdatedLid foreach (realmManager.unsubscribe('updated, _))
+      s.realmUpdatedLid = None
       Future.Done
   }
 
@@ -45,7 +46,7 @@ trait HandlerComponentImpl extends HandlerComponent {
         case Return(user) =>
           s.state = ServerSelectionState
           s.userOption = Some(user)
-          s.subscriptions(realmManager.updated) = realmServerUpdated(s)
+          s.realmUpdatedLid = Some(realmManager.subscribe('updated, realmServerUpdated(s)))
 
           s.transaction(
             SetNicknameMessage(user.nickname),
@@ -66,7 +67,7 @@ trait HandlerComponentImpl extends HandlerComponent {
   }
 
 
-  def realmServerUpdated(s: NetworkSession): Event.UnitListener = {
+  def realmServerUpdated(s: NetworkSession): Observable.UnitListener = {
     case realm: RealmServer =>
       s ! ServerListMessage(Seq(realm.infos))
   }
