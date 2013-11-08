@@ -45,6 +45,13 @@ trait BaseRepository[T <: Model[T]] extends Repository[T] {
   protected def setPrimaryKey(s: PreparedStatement): (Int, PrimaryKey) => Unit
   protected def setPersisted(o: T, rset: ResultSet): T
 
+  def where(query: String)(fn: PreparedStatement => Unit): Future[Seq[T]] = Async {
+    statement(selectQuery("WHERE " + query)) { s =>
+      fn(s)
+      resultsOf(s)(create)
+    }
+  }
+
   def find[V](column: String, value: V)(fn: PreparedStatement => (Int, V) => Unit): Future[Option[T]] = Async {
     statement(selectQuery(s"WHERE $column=?")) { s =>
       fn(s)(1, value)
@@ -73,11 +80,17 @@ trait BaseRepository[T <: Model[T]] extends Repository[T] {
     }
   }
 
-  def remove(o: T) = Async {
+  def remove(o: T) = Async[Unit] {
     statement(deleteQuery) { s =>
       setPrimaryKey(s)(1, o.id)
       s.executeUpdate()
-      () // force return Unit
+    }
+  }
+
+  def remove(id: PrimaryKey) = Async[Boolean] {
+    statement(deleteQuery) { s =>
+      setPrimaryKey(s)(1, id)
+      s.executeUpdate() > 1
     }
   }
 }
