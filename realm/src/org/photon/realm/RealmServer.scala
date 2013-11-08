@@ -1,6 +1,6 @@
 package org.photon.realm
 
-import org.photon.common.components.{Service, ServiceManagerComponent}
+import org.photon.common.components.{ExecutorComponentImpl, Service, ServiceManagerComponent}
 import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import java.io.File
@@ -10,6 +10,8 @@ object RealmServer {
     val component = new Object
       with ConfigurationComponent
       with ServiceManagerComponent
+      with ExecutorComponentImpl
+      with LoginManagerComponentImpl
     {
       lazy val config = sys.props.get("photon.config")
         .map { file => ConfigFactory.parseFile(new File(file)) }
