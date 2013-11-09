@@ -1,6 +1,6 @@
 package org.photon.realm
 
-import org.photon.common.components.{ExecutorComponentImpl, Service, ServiceManagerComponent}
+import org.photon.common.components.{DatabaseComponentImpl, ExecutorComponentImpl, Service, ServiceManagerComponent}
 import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import java.io.File
@@ -10,13 +10,18 @@ object RealmServer {
     val component = new Object
       with ConfigurationComponent
       with ServiceManagerComponent
+      with DatabaseComponentImpl
       with ExecutorComponentImpl
+      with PlayerRepositoryComponentImpl
       with LoginManagerComponentImpl
     {
       lazy val config = sys.props.get("photon.config")
         .map { file => ConfigFactory.parseFile(new File(file)) }
         .getOrElse(ConfigFactory.empty())
         .withFallback(ConfigFactory.load())
+
+      val databaseUrl = config.getString("photon.database.url")
+      val databaseDriver = config.getString("photon.database.driver")
 
       lazy val services = Seq.newBuilder[Service]
     }
