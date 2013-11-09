@@ -4,6 +4,8 @@ import com.twitter.util.Future
 import java.util.concurrent.Executor
 import java.sql.{PreparedStatement, ResultSet, Connection}
 
+sealed case class DatabaseException(reason: String) extends RuntimeException(reason)
+
 trait Model[T <: Model[T]] {
   type PrimaryKey
 
@@ -80,17 +82,16 @@ trait BaseRepository[T <: Model[T]] extends Repository[T] {
     }
   }
 
-  def remove(o: T) = Async[Unit] {
-    statement(deleteQuery) { s =>
-      setPrimaryKey(s)(1, o.id)
-      s.executeUpdate()
-    }
-  }
+  def remove(o: T) = removeId(o.id)
 
-  def remove(id: PrimaryKey) = Async[Boolean] {
+  def removeId(id: PrimaryKey) = Async[Unit] {
     statement(deleteQuery) { s =>
       setPrimaryKey(s)(1, id)
-      s.executeUpdate() > 1
+      s.executeUpdate() match {
+        case 0 => throw DatabaseException("no rows has been affected")
+        case 1 => // perfectly fine
+        case _ => throw DatabaseException("more than one row has been affected")
+      }
     }
   }
 }
