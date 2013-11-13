@@ -16,6 +16,9 @@ allprojects {
 
     sourceSets {
         main {
+            java {
+				srcDirs = ['src']
+			}
             scala {
                 srcDirs = ['src']
             }
@@ -24,9 +27,15 @@ allprojects {
             }
         }
         test {
+			java {
+				srcDirs = ['test']
+			}
             scala {
                 srcDirs = ['test']
             }
+			resources {
+				srcDirs = ['src']
+			}
         }
     }
 }

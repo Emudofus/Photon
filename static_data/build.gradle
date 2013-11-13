@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+repositories {
+	maven {
+		url 'https://raw.github.com/Blackrush/flatjson/maven-repo'
+	}
+}
+
+dependencies {
+	compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+	compile "com.fasterxml.jackson.module:jackson-module-scala:${jacksonVersion}"
+	compile "org.photon.jackson:flatjson:${flatjsonVersion}"
+}
