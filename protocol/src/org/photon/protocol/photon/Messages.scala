@@ -5,12 +5,12 @@ import org.photon.protocol.dofus.login.ServerState.{ServerState => State}
 
 sealed trait Message
 
-case class HelloConnectMessage() extends Message
+case class HelloConnectMessage(salt: Array[Byte]) extends Message
 case object Ack extends Message
 
-case class AuthMessage() extends Message
-case class AuthSuccessMessage() extends Message
-case class AuthErrorMessage() extends Message
+case class AuthMessage(id: Int, credentials: Array[Byte]) extends Message
+case object AuthSuccessMessage extends Message
+case object AuthErrorMessage extends Message
 
 case class InfosUpdateMessage(infos: Infos) extends Message
 case class StateUpdateMessage(state: State) extends Message
