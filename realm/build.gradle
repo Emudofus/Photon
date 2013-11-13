@@ -1,11 +1,18 @@
 apply plugin: 'application'
 mainClassName = 'org.photon.realm.RealmServer'
 
+repositories {
+    maven {
+        url 'https://raw.github.com/Blackrush/photon-persist/maven-repo'
+    }
+}
+
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
     compile "ch.qos.logback:logback-classic:${logbackVersion}"
     runtime "org.codehaus.groovy:groovy:${groovyVersion}" // required to configure through Groovy DSL
     compile "org.apache.mina:mina-core:${minaVersion}"
+    compile "org.photon.common:photon-persist:${photonPersistVersion}"
     runtime jdbcConnector
 
     compile project(":common")

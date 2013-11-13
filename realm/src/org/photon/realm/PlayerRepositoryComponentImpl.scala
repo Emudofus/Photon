@@ -1,40 +1,37 @@
 package org.photon.realm
 
 import org.photon.common.components.{ExecutorComponent, DatabaseComponent}
-import org.photon.common.BaseRepository
-import com.twitter.util.Future
 import java.sql.{PreparedStatement, ResultSet}
+import org.photon.common.persist.{ModelState, BaseRepository}
 
 trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
   self: DatabaseComponent with ExecutorComponent =>
+  import org.photon.common.persist.Parameters._
+  import org.photon.common.persist.Connections._
 
   implicit val playerRepository = new PlayerRepositoryImpl
 
-  class PlayerRepositoryImpl extends PlayerRepository with BaseRepository[Player] {
-    implicit val executor = self.executor
-    implicit val connection = self.database
+  class PlayerRepositoryImpl extends BaseRepository[Player](self.database) with PlayerRepository {
+    val table = "players"
+    val pkColumns = Seq("id")
+    val columns = Seq("owner_id", "name")
 
-    val tableName = "players"
-    val columns = Seq("id", "owner_id", "name")
-
-    protected def create(rset: ResultSet) = Player(
+    def buildModel(rset: ResultSet) = Player(
       rset.getLong("id"),
       rset.getLong("owner_id"),
       rset.getString("name")
     )
 
-    protected def setValues(s: PreparedStatement, o: Player) {
-      s.setLong(1, o.id)
-      s.setLong(2, o.ownerId)
-      s.setString(3, o.name)
+    def bindParams(ps: PreparedStatement, user: Player) {
+      ps.set(1, user.id)
+      ps.set(2, user.ownerId)
+      ps.set(3, user.name)
     }
 
-    protected def setPrimaryKey(s: PreparedStatement) = s.setLong
+    def setPersisted(o: Player, newId: Long) = o.copy(id = newId, state = ModelState.Persisted)
+    def setRemoved(o: Player) = o.copy(state = ModelState.Removed)
 
-    protected def setPersisted(o: Player, rset: ResultSet) = o.copy(id = rset.getLong("id"), persisted = true)
-
-    def findByName(name: String) = find("name", name)(_.setString).map(_.get)
-
-    def findByOwner(ownerId: Long) = where("owner_id=?") { _.setLong(1, ownerId) }
+    def findByName(name: String) = find("name", name)
+    def findByOwner(ownerId: Long) = filter("owner_id", ownerId)
   }
 }

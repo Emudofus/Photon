@@ -1,7 +1,8 @@
 package org.photon.login
 
 import com.twitter.util.{Time, Future}
-import org.photon.common.{Repository, Model}
+import org.photon.common.persist.{Repository, Model, ModelState}
+import org.photon.common.persist.ModelState.ModelState
 
 case class User(
   id: Long,
@@ -12,8 +13,8 @@ case class User(
   secretAnswer: String,
   communityId: Int,
   subscriptionEnd: Time,
-  persisted: Boolean = false
-) extends Model[User] {
+  state: ModelState = ModelState.None
+) extends Model {
   type PrimaryKey = Long
 }
 

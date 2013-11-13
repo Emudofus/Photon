@@ -1,14 +1,15 @@
 package org.photon.realm
 
-import org.photon.common.{Model, Repository}
 import com.twitter.util.Future
+import org.photon.common.persist.{Repository, Model, ModelState}
+import org.photon.common.persist.ModelState.ModelState
 
 case class Player(
   id: Long,
   ownerId: Long,
   name: String,
-  persisted: Boolean = true
-) extends Model[Player] {
+  state: ModelState = ModelState.None
+) extends Model {
   type PrimaryKey = Long
 }
 
