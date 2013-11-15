@@ -8,7 +8,7 @@ sealed trait Message
 case class HelloConnectMessage(salt: Array[Byte]) extends Message
 case object Ack extends Message
 
-case class AuthMessage(id: Int, credentials: Array[Byte]) extends Message
+case class AuthMessage(id: Int, credentials: Array[Byte], salt: Array[Byte]) extends Message
 case object AuthSuccessMessage extends Message
 case object AuthErrorMessage extends Message
 

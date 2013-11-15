@@ -30,6 +30,7 @@ trait RealmManagerComponent { self: ConfigurationComponent =>
 
   val realmManagerConfig = config.getConfig("photon.network.realm")
   val realmManagerPort = realmManagerConfig.getInt("port")
+  val realmManagerSaltLen = realmManagerConfig.getInt("salt-len")
 
   val realmManager: RealmManager
 }

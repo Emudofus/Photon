@@ -17,6 +17,8 @@ import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactor
 import org.photon.protocol.photon._
 import scala.Some
 import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
+import java.security.SecureRandom
+import java.nio.ByteBuffer
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>
@@ -117,12 +119,22 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
   protected case class Message(s: IoSession, o: Any) extends Req
   protected type RealmServerHandler = PartialFunction[Req, Future[_]]
 
+  def longToBytes(long: Long): Array[Byte] = (ByteBuffer allocate 8) putLong(long) array()
+
+  val rand = new SecureRandom(longToBytes(System.nanoTime))
+
+  def nextBytes(len: Int = realmManagerSaltLen): Array[Byte] = {
+    val salt = Array.ofDim[Byte](len)
+    rand.nextBytes(salt)
+    salt
+  }
+
   protected def handle: RealmServerHandler = {
-    case Connect(s) => s ! HelloConnectMessage()
+    case Connect(s) => s ! HelloConnectMessage(nextBytes())
 
     case Disconnect(s) => Future.Done
 
-    case Message(s, AuthMessage()) => ???
+    case Message(s, AuthMessage(id, credentials, salt)) => ???
 
     case Message(s, InfosUpdateMessage(infos)) =>
       val realm = s.attr[RealmServerImpl].get
