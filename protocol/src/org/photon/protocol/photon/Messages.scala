@@ -12,6 +12,7 @@ case class AuthMessage(id: Int, credentials: Array[Byte], salt: Array[Byte]) ext
 case object AuthSuccessMessage extends Message
 case object AuthErrorMessage extends Message
 
+case class PublicIdentityMessage(address: String, port: Int) extends Message
 case class InfosUpdateMessage(infos: Infos) extends Message
 case class StateUpdateMessage(state: State) extends Message
 

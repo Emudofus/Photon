@@ -1,8 +1,8 @@
 package org.photon.login
 
-import com.twitter.util.{Promise, Future}
+import com.twitter.util.{Throw, Return, Promise, Future}
 import org.photon.protocol.dofus.login.{PlayersOfServer, Server, ServerState}
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.{Logger, Logging}
 import scala.collection.mutable
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
 import org.photon.common.Async
@@ -19,11 +19,14 @@ import scala.Some
 import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
 import java.security.SecureRandom
 import java.nio.ByteBuffer
+import org.slf4j.LoggerFactory
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>
   import scala.collection.JavaConversions._
   import MinaConversion._
+
+  private val logger = Logger(LoggerFactory getLogger classOf[RealmManagerComponentImpl])
 
   val realmManager = new RealmManagerImpl
   services += realmManager
@@ -58,14 +61,18 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     }
   }
 
-  class RealmServerImpl(val address: String, val port: Int, session: IoSession) extends RealmServer {
+  class RealmServerImpl(session: IoSession) extends RealmServer {
     private[RealmManagerComponentImpl] val playerListRequests = mutable.Map.empty[Long, Promise[PlayersOfServer]]
     private[RealmManagerComponentImpl] val grantAccessRequests = mutable.Map.empty[Long, Promise[Unit]]
 
     var infosOption: Option[Server] = None
     def infos = infosOption.get
+    
+    var identity = PublicIdentity()
 
     def isAvailable = infos.state == ServerState.online
+    
+    def notifyUpdated(): Unit = realmManager.emit('updated, this)
 
     def fetchPlayers(user: User) = playerListRequests.get(user.id) getOrElse {
       val p = Promise[PlayersOfServer]
@@ -119,7 +126,7 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
   protected case class Message(s: IoSession, o: Any) extends Req
   protected type RealmServerHandler = PartialFunction[Req, Future[_]]
 
-  def longToBytes(long: Long): Array[Byte] = (ByteBuffer allocate 8) putLong(long) array()
+  def longToBytes(long: Long): Array[Byte] = (ByteBuffer allocate 8).putLong(long).array
 
   val rand = new SecureRandom(longToBytes(System.nanoTime))
 
@@ -129,23 +136,42 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     salt
   }
 
+
+  def auth(id: Int, credentials: Array[Byte], salt: Array[Byte]): Future[Unit] = Async {
+    ???
+  }
+
   protected def handle: RealmServerHandler = {
     case Connect(s) => s ! HelloConnectMessage(nextBytes())
 
     case Disconnect(s) => Future.Done
 
-    case Message(s, AuthMessage(id, credentials, salt)) => ???
+    case Message(s, AuthMessage(id, credentials, salt)) => auth(id, credentials, salt) transform {
+      case Return(_) =>
+        logger.info(s"successfully logged realm $id")
+        s ! AuthSuccessMessage
+
+      case Throw(RealmAuthException(reason, nested)) =>
+        logger.error(s"cannot auth realm $id because `$reason'", nested)
+        s ! AuthErrorMessage
+    }
+
+    case Message(s, PublicIdentityMessage(newAddress, newPort)) =>
+      val realm = s.attr[RealmServerImpl].get
+      realm.identity = realm.identity.copy(address = newAddress, port = newPort)
+      realm.notifyUpdated()
+      s ! Ack
 
     case Message(s, InfosUpdateMessage(infos)) =>
       val realm = s.attr[RealmServerImpl].get
       realm.infosOption = Some(infos)
-      realmManager.emit('updated, realm)
+      realm.notifyUpdated()
       s ! Ack
 
     case Message(s, StateUpdateMessage(state)) =>
       val realm = s.attr[RealmServerImpl].get
       realm.infosOption = Some(realm.infos.copy(state = state))
-      realmManager.emit('updated, realm)
+      realm.notifyUpdated()
       s ! Ack
 
     case Message(s, PlayerListSuccessMessage(userId, nplayers)) =>

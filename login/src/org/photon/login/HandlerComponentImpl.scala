@@ -82,7 +82,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 
     case Message(s, ServerSelectionRequestMessage(serverId)) => realmManager.find(serverId) match {
       case Some(realm) => realm.grantAccess(s.user, s.ticket) transform {
-        case Return(_) => s ! ServerSelectionMessage(realm.address, realm.port, s.ticket)
+        case Return(_) => s ! ServerSelectionMessage(realm.identity.address, realm.identity.port, s.ticket)
 
         case Throw(GrantAccessException()) =>
           logger.error(s"${s.remoteAddress} was not allowed to switch to ${realm.infos.id}")

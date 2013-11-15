@@ -5,6 +5,9 @@ repositories {
     maven {
         url 'https://raw.github.com/Blackrush/photon-persist/maven-repo'
     }
+    maven {
+        url 'https://raw.github.com/Blackrush/flatjson/maven-repo'
+    }
 }
 
 dependencies {

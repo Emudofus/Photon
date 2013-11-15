@@ -5,9 +5,11 @@ import org.photon.protocol.dofus.login.{PlayersOfServer, Server}
 import org.photon.common.Observable
 import org.photon.common.components.Service
 
+case class PublicIdentity(address: String = "INVALID ADDRESS", port: Int = -1)
+case class RealmAuthException(reason: String, nested: Throwable) extends RuntimeException(reason, nested)
+
 trait RealmServer {
-  def address: String
-  def port: Int
+  def identity: PublicIdentity
   def infos: Server
   def isAvailable: Boolean
 

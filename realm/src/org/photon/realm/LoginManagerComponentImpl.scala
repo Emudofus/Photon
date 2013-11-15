@@ -93,9 +93,9 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
     case Connect => Future.Done
     case Disconnect => Future.Done
 
-    case Message(HelloConnectMessage()) => ???
-    case Message(AuthSuccessMessage()) => ???
-    case Message(AuthErrorMessage()) => ???
+    case Message(HelloConnectMessage(salt)) => ???
+    case Message(AuthSuccessMessage) => ???
+    case Message(AuthErrorMessage) => ???
 
     case Message(Ack) => Future.Done
 
