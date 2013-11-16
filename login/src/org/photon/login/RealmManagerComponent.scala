@@ -4,9 +4,10 @@ import com.twitter.util.Future
 import org.photon.protocol.dofus.login.{PlayersOfServer, Server}
 import org.photon.common.Observable
 import org.photon.common.components.Service
+import java.security.MessageDigest
 
 case class PublicIdentity(address: String = "INVALID ADDRESS", port: Int = -1)
-case class RealmAuthException(reason: String, nested: Throwable) extends RuntimeException(reason, nested)
+case class RealmAuthException(reason: String = "", nested: Throwable = null) extends RuntimeException(reason, nested)
 
 trait RealmServer {
   def identity: PublicIdentity
@@ -33,6 +34,8 @@ trait RealmManagerComponent { self: ConfigurationComponent =>
   val realmManagerConfig = config.getConfig("photon.network.realm")
   val realmManagerPort = realmManagerConfig.getInt("port")
   val realmManagerSaltLen = realmManagerConfig.getInt("salt-len")
+  val realmManagerPasswordDigest = MessageDigest.getInstance(realmManagerConfig.getString("password-digest"))
+  val realmManagerPassword = realmManagerPasswordDigest.digest(realmManagerConfig.getString("password").getBytes("UTF-8"))
 
   val realmManager: RealmManager
 }

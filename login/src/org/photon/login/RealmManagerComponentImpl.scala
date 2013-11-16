@@ -1,7 +1,7 @@
 package org.photon.login
 
-import com.twitter.util.{Throw, Return, Promise, Future}
-import org.photon.protocol.dofus.login.{PlayersOfServer, Server, ServerState}
+import com.twitter.util._
+import org.photon.protocol.dofus.login.ServerState
 import com.typesafe.scalalogging.slf4j.{Logger, Logging}
 import scala.collection.mutable
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
@@ -15,11 +15,26 @@ import org.apache.mina.core.filterchain.IoFilterAdapter
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 import org.photon.protocol.photon._
-import scala.Some
 import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
-import java.security.SecureRandom
+import java.security.{MessageDigest, SecureRandom}
 import java.nio.ByteBuffer
 import org.slf4j.LoggerFactory
+import org.photon.protocol.photon.InfosUpdateMessage
+import org.photon.protocol.photon.PlayerListErrorMessage
+import scala.Some
+import org.photon.protocol.photon.GrantAccessMessage
+import org.photon.protocol.photon.StateUpdateMessage
+import org.photon.protocol.dofus.login.Server
+import org.photon.protocol.photon.GrantAccessSuccessMessage
+import org.photon.protocol.dofus.login.PlayersOfServer
+import org.photon.protocol.photon.PublicIdentityMessage
+import org.photon.protocol.photon.AuthMessage
+import org.photon.protocol.photon.GrantAccessErrorMessage
+import org.photon.protocol.photon.PlayerListSuccessMessage
+import org.photon.protocol.photon.PlayerListMessage
+import com.twitter.util.Throw
+import org.photon.protocol.photon.HelloConnectMessage
+import org.photon.protocol.photon.UserInfos
 
 trait RealmManagerComponentImpl extends RealmManagerComponent {
   self: ConfigurationComponent with ExecutorComponent with ServiceManagerComponent =>
@@ -136,9 +151,19 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     salt
   }
 
+  def expectedCredentials(salt: Array[Byte]) = realmManagerPasswordDigest.digest(realmManagerPassword ++ salt)
 
-  def auth(id: Int, credentials: Array[Byte], salt: Array[Byte]): Future[Unit] = Async {
-    ???
+  def auth(session: IoSession, id: Int, credentials: Array[Byte], salt: Array[Byte]): Future[Unit] = Async {
+    if (!MessageDigest.isEqual(credentials, expectedCredentials(salt))) {
+      throw RealmAuthException(reason = "invalid credentials")
+    }
+
+    if (realmManager.servers.contains(id)) {
+      throw RealmAuthException(reason = s"realm $id already authenticated")
+    }
+
+    val realm = new RealmServerImpl(session)
+    session.attr(Some(realm))
   }
 
   protected def handle: RealmServerHandler = {
@@ -146,15 +171,16 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
 
     case Disconnect(s) => Future.Done
 
-    case Message(s, AuthMessage(id, credentials, salt)) => auth(id, credentials, salt) transform {
-      case Return(_) =>
-        logger.info(s"successfully logged realm $id")
-        s ! AuthSuccessMessage
+    case Message(s, AuthMessage(id, credentials, salt)) =>
+      auth(s, id, credentials, salt) transform {
+        case Return(_) =>
+          logger.info(s"successfully logged realm $id")
+          s ! AuthSuccessMessage
 
-      case Throw(RealmAuthException(reason, nested)) =>
-        logger.error(s"cannot auth realm $id because `$reason'", nested)
-        s ! AuthErrorMessage
-    }
+        case Throw(RealmAuthException(reason, nested)) =>
+          logger.error(s"cannot auth realm $id because `$reason'", nested)
+          s ! AuthErrorMessage
+      }
 
     case Message(s, PublicIdentityMessage(newAddress, newPort)) =>
       val realm = s.attr[RealmServerImpl].get
