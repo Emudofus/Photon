@@ -8,13 +8,15 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 import org.apache.mina.core.filterchain.IoFilterAdapter
 import org.photon.common.Async
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.Logger
 import org.apache.mina.core.filterchain.IoFilter.NextFilter
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.core.write.WriteRequest
 import com.twitter.util.Future
 import org.photon.protocol.photon._
 import scala.Some
+import org.photon.protocol.dofus.login.{ServerState, Server}
+import org.slf4j.LoggerFactory
 
 trait LoginManagerComponentImpl extends LoginManagerComponent {
   self: ConfigurationComponent with ServiceManagerComponent with ExecutorComponent =>
@@ -23,7 +25,9 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
   val loginManager = new LoginManagerImpl
   services += loginManager
 
-  class LoginManagerImpl extends LoginManager with Logging {
+  private val logger = Logger(LoggerFactory getLogger classOf[LoginManagerComponentImpl])
+
+  class LoginManagerImpl extends LoginManager {
     val acceptor = new NioSocketConnector
     acceptor.setDefaultRemoteAddress(new InetSocketAddress(loginManagerPort))
     acceptor.setHandler(new LoginManagerHandlerImpl)
@@ -44,9 +48,11 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
       acceptor.dispose(true)
       logger.info("successfully killed")
     }
+
+    def updateState(state: ServerState.ServerState) = (session ! StateUpdateMessage(state)).unit
   }
 
-  class LoginManagerLoggingImpl extends IoFilterAdapter with Logging {
+  class LoginManagerLoggingImpl extends IoFilterAdapter {
     override def exceptionCaught(nextFilter: NextFilter, session: IoSession, cause: Throwable) {
       logger.error(s"unhandled exception", cause)
     }
@@ -88,13 +94,22 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
   protected case class Message(o: Any) extends Req
   protected type LoginManagerHandler = PartialFunction[Req, Future[_]]
 
+  def computePassword(salt: Array[Byte]): Array[Byte] = loginManagerPasswordDigest.digest(loginManagerPassword ++ salt)
+
   import loginManager.session
   protected def handle: LoginManagerHandler = {
     case Connect => Future.Done
     case Disconnect => Future.Done
 
-    case Message(HelloConnectMessage(salt)) => ???
-    case Message(AuthSuccessMessage) => ???
+    case Message(HelloConnectMessage(salt)) =>
+      session ! AuthMessage(1, computePassword(salt), salt)
+
+    case Message(AuthSuccessMessage) =>
+      logger.info("successfully connected to login")
+
+      session ! PublicIdentityMessage("", -1)
+      session ! InfosUpdateMessage(Server(1, ServerState.online, 0, joinable = true))
+
     case Message(AuthErrorMessage) => ???
 
     case Message(Ack) => Future.Done
