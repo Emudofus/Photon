@@ -163,13 +163,17 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     }
 
     val realm = new RealmServerImpl(session)
+    realmManager.servers(id) = realm
     session.attr(Some(realm))
   }
 
   protected def handle: RealmServerHandler = {
     case Connect(s) => s ! HelloConnectMessage(nextBytes())
 
-    case Disconnect(s) => Future.Done
+    case Disconnect(s) =>
+      realmManager.servers -= s.attr[RealmServerImpl].get.infos.id
+      realmManager.emit('updated)
+      Future.Done
 
     case Message(s, AuthMessage(id, credentials, salt)) =>
       auth(s, id, credentials, salt) transform {
@@ -185,7 +189,6 @@ trait RealmManagerComponentImpl extends RealmManagerComponent {
     case Message(s, PublicIdentityMessage(newAddress, newPort)) =>
       val realm = s.attr[RealmServerImpl].get
       realm.identity = realm.identity.copy(address = newAddress, port = newPort)
-      realm.notifyUpdated()
       s ! Ack
 
     case Message(s, InfosUpdateMessage(infos)) =>

@@ -70,6 +70,13 @@ trait HandlerComponentImpl extends HandlerComponent {
   def realmServerUpdated(s: NetworkSession): Observable.UnitListener = {
     case realm: RealmServer =>
       s ! ServerListMessage(Seq(realm.infos))
+    case () =>
+      realmManager.playerList(s.user) flatMap {
+        case players => s ! (
+          ServerListMessage(realmManager.availableServers),
+          PlayerListMessage(s.user.subscriptionEnd, players)
+        )
+      }
   }
 
 
