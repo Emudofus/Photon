@@ -20,8 +20,8 @@ object RealmServer {
         .getOrElse(ConfigFactory.empty())
         .withFallback(ConfigFactory.load())
 
-      val databaseUrl = config.getString("photon.database.url")
-      val databaseDriver = config.getString("photon.database.driver")
+      lazy val databaseUrl = config.getString("photon.database.url")
+      lazy val databaseDriver = config.getString("photon.database.driver")
 
       lazy val services = Seq.newBuilder[Service]
     }

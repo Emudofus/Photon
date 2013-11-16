@@ -63,7 +63,6 @@ trait NetworkComponent { self: ConfigurationComponent =>
 
   val networkPort = networkConfig.getInt("port")
   val networkCharset = Charset.forName(networkConfig.getString("charset"))
-  val networkMaxFrameLength = networkConfig.getInt("max-frame-length")
 
 
   val networkService: NetworkService

@@ -55,22 +55,27 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
   class LoginManagerLoggingImpl extends IoFilterAdapter {
     override def exceptionCaught(nextFilter: NextFilter, session: IoSession, cause: Throwable) {
       logger.error(s"unhandled exception", cause)
+      nextFilter.exceptionCaught(session, cause)
     }
 
     override def messageSent(nextFilter: NextFilter, session: IoSession, writeRequest: WriteRequest) {
       logger.debug(s"send ${writeRequest.getMessage}")
+      nextFilter.messageSent(session, writeRequest)
     }
 
     override def messageReceived(nextFilter: NextFilter, session: IoSession, message: Any) {
       logger.debug(s"receive $message")
+      nextFilter.messageReceived(session, message)
     }
 
     override def sessionClosed(nextFilter: NextFilter, session: IoSession) {
       logger.debug("session closed")
+      nextFilter.sessionClosed(session)
     }
 
     override def sessionOpened(nextFilter: NextFilter, session: IoSession) {
       logger.debug("session opened")
+      nextFilter.sessionOpened(session)
     }
   }
 

@@ -12,9 +12,9 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
   implicit val playerRepository = new PlayerRepositoryImpl
 
   class PlayerRepositoryImpl extends BaseRepository[Player](self.database) with PlayerRepository {
-    val table = "players"
-    val pkColumns = Seq("id")
-    val columns = Seq("owner_id", "name")
+    lazy val table = "players"
+    lazy val pkColumns = Seq("id")
+    lazy val columns = Seq("owner_id", "name")
 
     def buildModel(rset: ResultSet) = Player(
       rset.getLong("id"),

@@ -5,8 +5,8 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import org.photon.common.components.{ExecutorComponent, ServiceManagerComponent, Service}
 import org.photon.common.Async
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.photon.jackson.flatjson.FlatJsonModule
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import java.io.File
 
 trait StaticDataRepositoryComponentImpl extends StaticDataRepositoryComponent {
   self: ServiceManagerComponent with ExecutorComponent with ConfigurationComponent =>
@@ -18,11 +18,26 @@ trait StaticDataRepositoryComponentImpl extends StaticDataRepositoryComponent {
   services += staticDataRepo
 
   class StaticDataRepositoryImpl extends StaticDataRepository with Service {
-    private[this] val cache = mutable.Map.empty[Class[_], mutable.ArrayBuffer[Any]]
+
+    type ObjectMapper = com.fasterxml.jackson.databind.ObjectMapper with ScalaObjectMapper
+
+    trait CacheUp { self: ScalaObjectMapper =>
+      private[this] val cache = mutable.Map.empty[Class[_], mutable.ArrayBuffer[Any]]
+
+      def cacheUp[T](src: File)(implicit m: Manifest[T]) {
+        cache.getOrElseUpdate(m.runtimeClass, mutable.ArrayBuffer.empty) ++= self.readValue[Seq[T]](src)
+      }
+
+      def theCache = cache.mapValues(_.toSeq)
+    }
 
     def boot() = Async {
-      val mapper = new ObjectMapper
+      /*val mapper = new com.fasterxml.jackson.databind.ObjectMapper with ScalaObjectMapper with CacheUp {}
       mapper.registerModule(new FlatJsonModule)
+      mapper.registerModule(DefaultScalaModule)
+
+      mapper.cacheUp[MapData](new File("lol"))
+      val cache = mapper.theCache*/
     }
 
     def kill() = Async {
