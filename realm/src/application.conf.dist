@@ -1,14 +1,13 @@
 photon {
     network {
         login {
-            port = 5555
-            charset = UTF-8
-        }
-        realm {
             port = 5554
-            salt-len = 64
             password-digest = MD5
             password = lel
+        }
+        realm {
+            port = 5556
+            charset = UTF-8
         }
     }
 

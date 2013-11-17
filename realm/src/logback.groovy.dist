@@ -1,0 +1,9 @@
+
+appender("STDOUT", ConsoleAppender) {
+    encoder(PatternLayoutEncoder) {
+        pattern = '%d [%thread] %-5level %logger{36} - %msg%n'
+    }
+}
+
+root(DEBUG, ['STDOUT'])
+logger("org.photon", TRACE)
