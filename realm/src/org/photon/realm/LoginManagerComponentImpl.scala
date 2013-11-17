@@ -12,14 +12,14 @@ import com.typesafe.scalalogging.slf4j.Logger
 import org.apache.mina.core.filterchain.IoFilter.NextFilter
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.core.write.WriteRequest
-import com.twitter.util.Future
+import com.twitter.util.{NonFatal, Throw, Return, Future}
 import org.photon.protocol.photon._
 import scala.Some
 import org.photon.protocol.dofus.login.{ServerState, Server}
 import org.slf4j.LoggerFactory
 
 trait LoginManagerComponentImpl extends LoginManagerComponent {
-  self: ConfigurationComponent with ServiceManagerComponent with ExecutorComponent =>
+  self: ConfigurationComponent with ServiceManagerComponent with ExecutorComponent with PlayerRepositoryComponent =>
   import MinaConversion._
 
   val loginManager = new LoginManagerImpl
@@ -120,7 +120,14 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
     case Message(Ack) => Future.Done
 
     case Message(PlayerListMessage(userId)) =>
-      session ! PlayerListSuccessMessage(userId, 1) // TODO give player list to login
+      playerRepository.findByOwner(userId) transform {
+        case Return(players) =>
+          session ! PlayerListSuccessMessage(userId, players.size)
+
+        case Throw(NonFatal(ex)) =>
+          logger.error(s"can't get players list of $userId", ex)
+          session ! PlayerListErrorMessage(userId)
+      }
 
     case Message(GrantAccessMessage(user, ticket)) =>
       session ! GrantAccessSuccessMessage(user.id) // TODO grant access
