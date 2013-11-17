@@ -4,8 +4,17 @@ photon {
             port = 5554
             password-digest = MD5
             password = lel
+
+            identity {
+                id = ${photon.network.realm.id}
+                completion = ${photon.network.realm.completion}
+                address = "127.0.0.1"
+                port = ${photon.network.realm.port}
+            }
         }
         realm {
+            id = 1
+            completion = 0
             port = 5556
             charset = UTF-8
         }

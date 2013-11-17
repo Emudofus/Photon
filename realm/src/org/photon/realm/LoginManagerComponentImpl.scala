@@ -107,13 +107,18 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
     case Disconnect => Future.Done
 
     case Message(HelloConnectMessage(salt)) =>
-      session ! AuthMessage(1, computePassword(salt), salt)
+      session ! AuthMessage(loginManagerIdentity.id, computePassword(salt), salt)
 
     case Message(AuthSuccessMessage) =>
       logger.info("successfully connected to login")
 
-      session ! PublicIdentityMessage("", -1)
-      session ! InfosUpdateMessage(Server(1, ServerState.online, 0, joinable = true))
+      session ! PublicIdentityMessage(loginManagerIdentity.address, loginManagerIdentity.port)
+      session ! InfosUpdateMessage(Server(
+        loginManagerIdentity.id,
+        ServerState.online,
+        loginManagerIdentity.completion,
+        joinable = true
+      ))
 
     case Message(AuthErrorMessage) => ???
 
