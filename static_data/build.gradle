@@ -1,13 +1,13 @@
 apply plugin: 'java'
 
 repositories {
-	maven {
-		url 'https://raw.github.com/Blackrush/flatjson/maven-repo'
-	}
+	maven { url 'https://raw.github.com/Blackrush/flatjson/maven-repo' }
+    maven { url 'https://raw.github.com/Blackrush/photon-persist/maven-repo' }
 }
 
 dependencies {
 	compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 	compile "com.fasterxml.jackson.module:jackson-module-scala_${scalaVersion}:${jacksonVersion}"
 	compile "org.photon.jackson:flatjson:${flatjsonVersion}"
+    compile 'org.photon.common:photon-persist:0.1.1'
 }
