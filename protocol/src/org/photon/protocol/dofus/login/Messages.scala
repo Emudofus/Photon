@@ -112,23 +112,7 @@ case object PlayerListRequestMessage extends DofusStaticMessage {
   val data = ""
 }
 
-object Test {
-  implicit class SerializablesExt[T <: StringSerializable](val c: Seq[T]) extends AnyVal {
-    def serialize(out: StringBuilder, sep: String = "", start: String = "", end: String = "") {
-      out ++= start
-      var first: Boolean = true
-      for (s <- c) {
-        if (first) first = false
-        else out ++= sep
-        s.serialize(out)
-      }
-    }
-  }
-}
-
 case class ServerListMessage(servers: Seq[Server]) extends DofusMessage {
-  import Test._
-
   def definition = ServerListMessage
   def serialize(out: Out) = servers.serialize(out, sep = "|")
 }
@@ -139,8 +123,6 @@ object ServerListMessage extends DofusDeserializer {
 }
 
 case class PlayerListMessage(subscriptionEnd: Time, players: Seq[PlayersOfServer]) extends DofusMessage {
-  import Test._
-
   def definition = PlayerListMessage
   def serialize(out: Out) {
     out ++= subscriptionEnd.untilNow.inMilliseconds.toString
