@@ -19,7 +19,7 @@ import org.photon.protocol.dofus.login.{ServerState, Server}
 import org.slf4j.LoggerFactory
 
 trait LoginManagerComponentImpl extends LoginManagerComponent {
-  self: ConfigurationComponent with ServiceManagerComponent with ExecutorComponent with PlayerRepositoryComponent =>
+  self: ConfigurationComponent with ServiceManagerComponent with ExecutorComponent with PlayerRepositoryComponent with NetworkComponent =>
   import MinaConversion._
 
   val loginManager = new LoginManagerImpl
@@ -135,6 +135,12 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
       }
 
     case Message(GrantAccessMessage(user, ticket)) =>
-      session ! GrantAccessSuccessMessage(user.id) // TODO grant access
+      networkService.grantUser(user, ticket) transform {
+        case Return(_) => session ! GrantAccessSuccessMessage(user.id)
+
+        case Throw(GrantAccessException(reason, underlying)) =>
+          logger.debug(s"can't grant access to ${user.id} because : $reason", underlying)
+          session ! GrantAccessErrorMessage(user.id)
+      }
   }
 }

@@ -2,8 +2,15 @@ package org.photon.realm
 
 import org.photon.common.{network => base}
 import java.nio.charset.Charset
+import com.twitter.util.Future
+import org.photon.protocol.photon.UserInfos
 
-trait NetworkService extends base.NetworkService
+final case class GrantAccessException(reason: String = "", underlying: Throwable = null)
+  extends RuntimeException(reason, underlying)
+
+trait NetworkService extends base.NetworkService {
+  def grantUser(user: UserInfos, ticket: String): Future[Unit]
+}
 
 trait NetworkSession extends base.NetworkSession
 
