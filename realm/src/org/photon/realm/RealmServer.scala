@@ -14,6 +14,8 @@ object RealmServer {
       with ExecutorComponentImpl
       with PlayerRepositoryComponentImpl
       with LoginManagerComponentImpl
+      with HandlerComponent
+      with NetworkComponentImpl
     {
       lazy val config = sys.props.get("photon.config")
         .map { file => ConfigFactory.parseFile(new File(file)) }
@@ -24,6 +26,10 @@ object RealmServer {
       lazy val databaseDriver = config.getString("photon.database.driver")
 
       lazy val services = Seq.newBuilder[Service]
+
+      val networkHandler: HandlerComponent.NetworkHandler = {
+        case HandlerComponent.Connect(s) => Future.Done
+      }
     }
 
     val services = component.services.result()

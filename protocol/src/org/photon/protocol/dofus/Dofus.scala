@@ -2,6 +2,7 @@ package org.photon.protocol.dofus
 
 import org.photon.protocol.dofus.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
 import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializable}
+import scala.annotation.tailrec
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder
@@ -17,6 +18,8 @@ trait DofusMessage extends Message with StringSerializable {
 
 trait DofusDeserializer extends MessageDefinition with StringDeserializer {
   type Opcode = String
+
+  override def deserialize(in: In): Option[DofusMessage]
 }
 
 trait DofusStaticMessage extends DofusMessage with DofusDeserializer {
@@ -35,4 +38,26 @@ object DofusProtocol {
     PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
     ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage
   )
+
+  def deserialize(o: String): Option[DofusMessage] = o.splitAt(2) match {
+    case (opcode, data) => deserializers.get(opcode).flatMap(_.deserialize(data))
+  }
+
+  def serialize(messages: List[DofusMessage]): String = {
+
+    @tailrec
+    def rec(o: List[DofusMessage])(implicit builder: StringBuilder): String = o match {
+      case head :: tail =>
+        builder ++= head.definition.opcode
+        head.serialize(builder)
+        builder += '\0'
+
+        rec(tail)
+
+      case Nil =>
+        builder.result()
+    }
+
+    rec(messages)(StringBuilder.newBuilder)
+  }
 }

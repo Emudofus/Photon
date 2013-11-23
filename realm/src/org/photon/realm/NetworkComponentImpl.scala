@@ -1,23 +1,22 @@
-package org.photon.login
+package org.photon.realm
 
 import com.twitter.util.Future
+import scala.collection.mutable
+import org.photon.common.Async
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
-import java.net.InetSocketAddress
-import org.photon.common.{Observable, Strings, Async}
-import scala.collection.mutable
-import org.apache.mina.core.service.IoHandlerAdapter
-import org.apache.mina.filter.codec._
-import org.apache.mina.filter.codec.textline.TextLineCodecFactory
+import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
 import org.apache.mina.core.filterchain.IoFilterAdapter
+import org.apache.mina.filter.util.WriteRequestFilter
 import org.apache.mina.core.filterchain.IoFilter.NextFilter
 import org.apache.mina.core.write.WriteRequest
-import org.photon.protocol.dofus.login.{AuthenticationMessage, VersionMessage}
-import com.typesafe.scalalogging.slf4j.Logging
-import org.apache.mina.filter.util.WriteRequestFilter
-import java.util.Random
-import org.photon.protocol.dofus.{DofusProtocol, DofusMessage}
-import org.photon.common.components.{ServiceManagerComponent, ExecutorComponent}
+import java.net.InetSocketAddress
+import org.apache.mina.filter.codec.ProtocolCodecFilter
+import org.apache.mina.filter.codec.textline.TextLineCodecFactory
+import org.apache.mina.core.service.IoHandlerAdapter
+import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.slf4j.Logger
+import org.photon.protocol.dofus.{DofusMessage, DofusProtocol}
 
 trait NetworkComponentImpl extends NetworkComponent {
   self: ConfigurationComponent with ExecutorComponent with HandlerComponent with ServiceManagerComponent =>
@@ -27,9 +26,12 @@ trait NetworkComponentImpl extends NetworkComponent {
   val networkService = new NetworkServiceImpl
   services += networkService
 
-  private val networkSessionAttributeKey = "photon.network.login.session"
+  private val logger = Logger(LoggerFactory getLogger classOf[NetworkComponentImpl])
+  private val networkSessionAttributeKey = "photon.network.realm.session"
 
-  class NetworkServiceImpl extends NetworkService with Logging {
+  class NetworkServiceImpl extends NetworkService {
+    val connected = mutable.ArrayBuffer.empty[NetworkSession]
+
     val acceptor = new NioSocketAcceptor(executor, new NioProcessor(executor))
     acceptor.setDefaultLocalAddress(new InetSocketAddress(networkPort))
     acceptor.setHandler(new NetworkHandlerImpl)
@@ -38,8 +40,6 @@ trait NetworkComponentImpl extends NetworkComponent {
       new TextLineCodecFactory(networkCharset, "\u0000", "\n\u0000")))
     acceptor.getFilterChain.addLast("codec", new NetworkCodecImpl)
     acceptor.getFilterChain.addLast("logging", new NetworkLoggingImpl)
-
-    val connected = mutable.ArrayBuffer.empty[NetworkSession]
 
     def boot() = Async {
       acceptor.bind()
@@ -56,62 +56,36 @@ trait NetworkComponentImpl extends NetworkComponent {
     }
   }
 
-  class NetworkSessionImpl(val ticket: String, session: IoSession) extends NetworkSession {
-    import NetworkSession._
-
-    var state: State = VersionCheckState
-    var realmUpdatedLid: Option[Observable.Lid] = None
-    var userOption: Option[User] = None
-
+  class NetworkSessionImpl(underlying: IoSession) extends NetworkSession {
     def service = networkService
-    val closeFuture = session.getCloseFuture.toTw(this)
-    val remoteAddress = session.getRemoteAddress
+    def remoteAddress = underlying.getRemoteAddress
+    val closeFuture = underlying.getCloseFuture.toTw(this)
 
-    def write(o: Any) = session.write(o).toTw(this)
     def flush() = Future(this)
+    def write(o: Any) = underlying.write(o).toTw(this)
     def close() = {
-      session.close(false)
+      underlying.close(false)
       closeFuture
     }
-
-    override def !(o: Any) = write(o)
-    override def transaction(msgs: Any*) = write(msgs.toSeq)
   }
 
-  class NetworkCodecImpl extends WriteRequestFilter with Logging {
-    import NetworkSession._
-
-    override def messageReceived(nextFilter: NextFilter, s: IoSession, o: Any) {
-      val session = s.getAttribute(networkSessionAttributeKey).asInstanceOf[NetworkSessionImpl]
-
-      o match {
-        case data: String =>
-          val msg = session.state match {
-            case VersionCheckState => VersionMessage.deserialize(data)
-            case AuthenticationState => AuthenticationMessage.deserialize(data)
-            case ServerSelectionState => DofusProtocol.deserialize(data)
-          }
-
-          msg match {
-            case None => logger.warn(s"cannot parse $data")
-            case Some(m) => nextFilter.messageReceived(s, m)
-          }
+  class NetworkCodecImpl extends WriteRequestFilter {
+    override def messageReceived(next: NextFilter, s: IoSession, o: Any) {
+      DofusProtocol.deserialize(o asInstanceOf) match {
+        case Some(m) => next.messageReceived(s, m)
+        case None => logger.debug(s"cannot parse $o")
       }
     }
 
-    def doFilterWrite(nextFilter: NextFilter, session: IoSession, writeRequest: WriteRequest) = {
-      val res = DofusProtocol.serialize(writeRequest.getMessage match {
-        case msg: DofusMessage => List(msg)
-        case msgs: Seq[DofusMessage] => msgs.toList
-        case msgs: List[DofusMessage] => msgs
+    def doFilterWrite(next: NextFilter, s: IoSession, req: WriteRequest) =
+      DofusProtocol.serialize(req.getMessage match {
+        case m: DofusMessage => List(m)
+        case m: List[DofusMessage] => m
+        case m: Seq[DofusMessage] => m.toList
       })
-
-      logger.trace(s"send [${res.length}] $res to ${session.getRemoteAddress}")
-      res
-    }
   }
 
-  class NetworkLoggingImpl extends IoFilterAdapter with Logging {
+  class NetworkLoggingImpl extends IoFilterAdapter {
     override def exceptionCaught(nextFilter: NextFilter, session: IoSession, cause: Throwable) {
       logger.error(s"session ${session.getRemoteAddress} has thrown an exception", cause)
       nextFilter.exceptionCaught(session, cause)
@@ -138,13 +112,11 @@ trait NetworkComponentImpl extends NetworkComponent {
     }
   }
 
-  class NetworkHandlerImpl extends IoHandlerAdapter with Logging {
+  class NetworkHandlerImpl extends IoHandlerAdapter {
     import HandlerComponent._
 
-    implicit val random = new Random(System.nanoTime)
-
     override def sessionOpened(s: IoSession) {
-      val session = new NetworkSessionImpl(Strings.next(32), s)
+      val session = new NetworkSessionImpl(s)
       s.setAttribute(networkSessionAttributeKey, session)
 
       networkHandler(Connect(session))
@@ -159,7 +131,7 @@ trait NetworkComponentImpl extends NetworkComponent {
     override def messageReceived(s: IoSession, o: Any) {
       val session = s.getAttribute(networkSessionAttributeKey).asInstanceOf[NetworkSessionImpl]
 
-      val task = Message(session, o)
+      val task = Message(session, o.asInstanceOf[DofusMessage])
       if (networkHandler.isDefinedAt(task)) {
         networkHandler(task)
       } else {
