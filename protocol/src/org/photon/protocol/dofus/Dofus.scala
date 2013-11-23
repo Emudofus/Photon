@@ -1,9 +1,7 @@
 package org.photon.protocol.dofus
 
-import org.photon.protocol.dofus.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
 import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializable}
 import scala.annotation.tailrec
-import org.photon.protocol.dofus.account.{IdentityMessage, GiftListRequestMessage, RegionalVersionRequestMessage, AuthRequestMessage}
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder
@@ -57,13 +55,14 @@ object DofusProtocol {
   }
 
   val deserializers: Map[String, DofusDeserializer] = Map(
-    QueueStatusRequestMessage.opcode -> QueueStatusRequestMessage,
-    PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
-    ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage,
-    AuthRequestMessage.opcode -> AuthRequestMessage,
-    RegionalVersionRequestMessage.opcode -> RegionalVersionRequestMessage,
-    GiftListRequestMessage.opcode -> GiftListRequestMessage,
-    IdentityMessage.opcode -> IdentityMessage,
-    PlayerListRequestMessage.opcode -> PlayerListRequestMessage
+    login.QueueStatusRequestMessage.opcode -> login.QueueStatusRequestMessage,
+    login.PlayerListRequestMessage.opcode -> login.PlayerListRequestMessage,
+    login.ServerSelectionRequestMessage.opcode -> login.ServerSelectionRequestMessage,
+
+    account.AuthRequestMessage.opcode -> account.AuthRequestMessage,
+    account.RegionalVersionRequestMessage.opcode -> account.RegionalVersionRequestMessage,
+    account.GiftListRequestMessage.opcode -> account.GiftListRequestMessage,
+    account.IdentityMessage.opcode -> account.IdentityMessage,
+    account.PlayerListRequestMessage.opcode -> account.PlayerListRequestMessage
   )
 }
