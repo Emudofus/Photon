@@ -16,8 +16,8 @@ trait HandlerComponentImpl extends HandlerComponent {
 
   val networkHandler =
     connections orElse
-    (authHandler %> non_authenticated) orElse
-    (playerSelectionHandler %> authenticated)
+    (authHandler filter nonAuthenticated then authenticated) orElse
+    (playerSelectionHandler filter authenticated)
 
   def connections: NetworkHandler = {
     case Connect(s) => s ! HelloGameMessage
