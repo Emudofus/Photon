@@ -17,6 +17,7 @@ import org.apache.mina.core.service.IoHandlerAdapter
 import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import org.photon.protocol.dofus.{DofusMessage, DofusProtocol}
+import org.photon.protocol.photon.UserInfos
 
 trait NetworkComponentImpl extends NetworkComponent {
   self: ConfigurationComponent with ExecutorComponent with HandlerComponent with ServiceManagerComponent =>
@@ -31,6 +32,7 @@ trait NetworkComponentImpl extends NetworkComponent {
 
   class NetworkServiceImpl extends NetworkService {
     val connected = mutable.ArrayBuffer.empty[NetworkSession]
+    val grantedUsers = mutable.Map.empty[String, UserInfos]
 
     val acceptor = new NioSocketAcceptor(executor, new NioProcessor(executor))
     acceptor.setDefaultLocalAddress(new InetSocketAddress(networkPort))
@@ -54,9 +56,24 @@ trait NetworkComponentImpl extends NetworkComponent {
 
       logger.info("successfully killed")
     }
+
+    def grantUser(user: UserInfos, ticket: String) = Future {
+      if (grantedUsers.exists { case (a, b) => a == ticket || b == user }) {
+        throw GrantAccessException(reason = "ticket already taken or user already granted")
+      }
+
+      grantedUsers(ticket) = user
+    }
+
+    def auth(ticket: String) = Future {
+      grantedUsers.remove(ticket)
+        .getOrElse(throw AuthException(reason = s"unknown ticket $ticket"))
+    }
   }
 
   class NetworkSessionImpl(underlying: IoSession) extends NetworkSession {
+    var userOption: Option[UserInfos] = None
+
     def service = networkService
     def remoteAddress = underlying.getRemoteAddress
     val closeFuture = underlying.getCloseFuture.toTw(this)

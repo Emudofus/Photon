@@ -24,4 +24,8 @@ photon {
         url = "jdbc:postgresql://localhost/photon?user=postgres"
         driver = org.postgresql.Driver
     }
+
+    realm {
+        community = 0
+    }
 }

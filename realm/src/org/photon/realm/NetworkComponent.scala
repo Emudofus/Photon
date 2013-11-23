@@ -8,11 +8,18 @@ import org.photon.protocol.photon.UserInfos
 final case class GrantAccessException(reason: String = "", underlying: Throwable = null)
   extends RuntimeException(reason, underlying)
 
+final case class AuthException(reason: String = "", underlying: Throwable = null)
+  extends RuntimeException(reason, underlying)
+
 trait NetworkService extends base.NetworkService {
   def grantUser(user: UserInfos, ticket: String): Future[Unit]
+  def auth(ticket: String): Future[UserInfos]
 }
 
-trait NetworkSession extends base.NetworkSession
+trait NetworkSession extends base.NetworkSession {
+  var userOption: Option[UserInfos]
+  def user = userOption.get
+}
 
 trait NetworkComponent {
   self: ConfigurationComponent =>
