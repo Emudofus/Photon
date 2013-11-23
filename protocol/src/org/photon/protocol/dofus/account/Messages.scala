@@ -1,6 +1,7 @@
 package org.photon.protocol.dofus.account
 
-import org.photon.protocol.dofus.{DofusMessage, DofusDeserializer, DofusStaticMessage}
+import org.photon.protocol.dofus._
+import com.twitter.util.Time
 
 case object HelloGameMessage extends DofusStaticMessage {
   val opcode = "HG"
@@ -72,5 +73,19 @@ object IdentityMessage extends DofusDeserializer {
 
 case object PlayerListRequestMessage extends DofusStaticMessage {
   val opcode = "AL"
-  val data = ???
+  val data = ""
+}
+
+case class PlayerListMessage(subscriptionEnd: Time, players: Seq[Player]) extends DofusMessage {
+  def definition = PlayerListMessage
+  def serialize(out: Out) {
+    out append subscriptionEnd.untilNow.inMilliseconds append '|'
+    out append players.size append '|'
+    players.serialize(out, sep = "|")
+  }
+}
+
+object PlayerListMessage extends DofusDeserializer {
+  val opcode = "ALK"
+  def deserialize(in: In) = None
 }

@@ -12,4 +12,7 @@ package object dofus {
       }
     }
   }
+
+  def hex(c: Int) = if (c < 0) "-1" else Integer.toString(c, 16)
+  def btoi(b: Boolean) = if (b) "1" else "0"
 }
