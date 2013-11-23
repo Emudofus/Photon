@@ -48,5 +48,11 @@ object HandlerComponent {
 trait HandlerComponent {
   import HandlerComponent._
 
-  val networkHandler: NetworkHandler
+  def networkHandler: NetworkHandler
+}
+
+trait BaseHandlerComponent extends HandlerComponent {
+  import HandlerComponent._
+
+  def networkHandler: NetworkHandler = PartialFunction.empty
 }
