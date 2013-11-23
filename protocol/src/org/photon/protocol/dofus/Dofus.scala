@@ -3,7 +3,7 @@ package org.photon.protocol.dofus
 import org.photon.protocol.dofus.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
 import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializable}
 import scala.annotation.tailrec
-import org.photon.protocol.dofus.account.AuthRequestMessage
+import org.photon.protocol.dofus.account.{RegionalVersionRequestMessage, AuthRequestMessage}
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder
@@ -60,6 +60,7 @@ object DofusProtocol {
     QueueStatusRequestMessage.opcode -> QueueStatusRequestMessage,
     PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
     ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage,
-    AuthRequestMessage.opcode -> AuthRequestMessage
+    AuthRequestMessage.opcode -> AuthRequestMessage,
+    RegionalVersionRequestMessage.opcode -> RegionalVersionRequestMessage
   )
 }

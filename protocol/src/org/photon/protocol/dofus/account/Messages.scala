@@ -30,3 +30,22 @@ object AuthMessage extends DofusDeserializer {
     else
       None
 }
+
+case object RegionalVersionRequestMessage extends DofusStaticMessage {
+  val opcode = "AV"
+  val data = ""
+}
+
+case class RegionalVersionMessage(community: Int) extends DofusMessage {
+  def definition = RegionalVersionMessage
+  def serialize(out: Out) = out append community
+}
+
+object RegionalVersionMessage extends DofusDeserializer {
+  val opcode = "AV"
+  def deserialize(in: In) = try {
+    Some(RegionalVersionMessage(in.toInt))
+  } catch {
+    case _: NumberFormatException => None
+  }
+}
