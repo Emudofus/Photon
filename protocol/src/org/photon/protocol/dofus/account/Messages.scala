@@ -133,3 +133,18 @@ object PlayerCreationRequestMessage extends DofusDeserializer {
     case _ => None
   }
 }
+
+abstract class PlayerCreationErrorMessage(val reason: Char) extends DofusStaticMessage {
+  val opcode = "AA"
+  val data = "E" + reason
+}
+
+case object SubscriptionOutCreationMessage extends PlayerCreationErrorMessage('s')
+case object UnavailableSpaceCreationMessage extends PlayerCreationErrorMessage('f')
+case object ExistingPlayerNameCreationMessage extends PlayerCreationErrorMessage('a')
+case object BadPlayerNameCreationMessage extends PlayerCreationErrorMessage('n')
+
+case object PlayerCreationSuccessMessage extends DofusStaticMessage {
+  val opcode = "AA"
+  val data = "K"
+}
