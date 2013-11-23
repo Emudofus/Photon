@@ -89,3 +89,47 @@ object PlayerListMessage extends DofusDeserializer {
   val opcode = "ALK"
   def deserialize(in: In) = None
 }
+
+case object RandomPlayerNameRequestMessage extends DofusStaticMessage {
+  val opcode = "AP"
+  val data = ""
+}
+
+case class RandomPlayerNameMessage(name: String) extends DofusMessage {
+  def definition = RandomPlayerNameMessage
+  def serialize(out: Out) = out ++= name
+}
+
+object RandomPlayerNameMessage extends DofusDeserializer {
+  val opcode = "AP"
+  def deserialize(in: In) = Some(RandomPlayerNameMessage(in))
+}
+
+case class PlayerCreationRequestMessage(
+  name: String,
+  breed: Int,
+  gender: Boolean,
+  color1: Int,
+  color2: Int,
+  color3: Int
+) extends DofusMessage {
+  def definition = PlayerCreationRequestMessage
+  def serialize(out: Out) {
+    out append name append '|'
+    out append breed append '|'
+    out append btoi(gender) append '|'
+    out append color1 append '|'
+    out append color2 append '|'
+    out append color3
+  }
+}
+
+object PlayerCreationRequestMessage extends DofusDeserializer {
+  val opcode = "AA"
+  def deserialize(in: In) = in.split("\\|", 6) match {
+    case Array(name, Int(breed), gender, Int(color1), Int(color2), Int(color3)) =>
+      Some(PlayerCreationRequestMessage(name, breed, itob(gender), color1, color2, color3))
+
+    case _ => None
+  }
+}
