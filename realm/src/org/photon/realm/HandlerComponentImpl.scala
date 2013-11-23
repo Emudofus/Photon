@@ -8,7 +8,7 @@ import scala.Some
 import org.photon.protocol.dofus.login.QueueStatusRequestMessage
 
 trait HandlerComponentImpl extends HandlerComponent {
-  self: NetworkComponent with ConfigurationComponent =>
+  self: NetworkComponent with ConfigurationComponent with PlayerRepositoryComponent =>
   import HandlerComponent._
 
   private val logger = Logger(LoggerFactory getLogger classOf[HandlerComponentImpl])
@@ -16,7 +16,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 
   val networkHandler =
     connections orElse
-    (authHandler filter nonAuthenticated then authenticated) orElse
+    (authHandler filter nonAuthenticated) orElse
     (playerSelectionHandler filter authenticated)
 
   def connections: NetworkHandler = {
@@ -38,9 +38,16 @@ trait HandlerComponentImpl extends HandlerComponent {
   }
   
   def playerSelectionHandler: NetworkHandler = {
-    case Message(s, QueueStatusRequestMessage) => Future.Done
+    case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
+    case Message(s, GiftListRequestMessage(locale)) => Future.Done // TODO gifts
+    case Message(s, IdentityMessage(identity)) => Future.Done // useless
 
     case Message(s, RegionalVersionRequestMessage) =>
       s ! RegionalVersionMessage(communityId)
+
+    case Message(s, PlayerListRequestMessage) => playerRepository.findByOwner(s.user.id) flatMap {
+      case players =>
+        s ! PlayerListMessage(s.user.subscriptionEnd, players.toStream map { _.toPlayerTemplate })
+    }
   }
 }
