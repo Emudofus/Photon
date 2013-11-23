@@ -101,7 +101,7 @@ case class RandomPlayerNameMessage(name: String) extends DofusMessage {
 }
 
 object RandomPlayerNameMessage extends DofusDeserializer {
-  val opcode = "AP"
+  val opcode = "APK"
   def deserialize(in: In) = Some(RandomPlayerNameMessage(in))
 }
 
