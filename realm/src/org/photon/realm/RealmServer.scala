@@ -4,6 +4,7 @@ import org.photon.common.components.{DatabaseComponentImpl, ExecutorComponentImp
 import com.twitter.util.{Await, Future}
 import com.typesafe.config.ConfigFactory
 import java.io.File
+import org.photon.protocol.dofus.account.{AuthRequestMessage, HelloGameMessage}
 
 object RealmServer {
   def main(args: Array[String]) {
@@ -28,7 +29,9 @@ object RealmServer {
       lazy val services = Seq.newBuilder[Service]
 
       val networkHandler: HandlerComponent.NetworkHandler = {
-        case HandlerComponent.Connect(s) => Future.Done
+        case HandlerComponent.Connect(s) => s ! HelloGameMessage
+
+        case HandlerComponent.Message(s, AuthRequestMessage(ticket)) => Future.Done
       }
     }
 

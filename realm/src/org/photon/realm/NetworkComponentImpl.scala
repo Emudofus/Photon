@@ -71,7 +71,7 @@ trait NetworkComponentImpl extends NetworkComponent {
 
   class NetworkCodecImpl extends WriteRequestFilter {
     override def messageReceived(next: NextFilter, s: IoSession, o: Any) {
-      DofusProtocol.deserialize(o asInstanceOf) match {
+      DofusProtocol.deserialize(o.asInstanceOf[String]) match {
         case Some(m) => next.messageReceived(s, m)
         case None => logger.debug(s"cannot parse $o")
       }

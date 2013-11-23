@@ -3,6 +3,7 @@ package org.photon.protocol.dofus
 import org.photon.protocol.dofus.login.{ServerSelectionRequestMessage, PlayerListRequestMessage, QueueStatusRequestMessage}
 import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializable}
 import scala.annotation.tailrec
+import org.photon.protocol.dofus.account.AuthRequestMessage
 
 trait StringSerializable extends Serializable {
   type Out = StringBuilder
@@ -33,12 +34,6 @@ trait DofusStaticMessage extends DofusMessage with DofusDeserializer {
 object DofusProtocol {
   val version = "1.29.1"
 
-  val deserializers: Map[String, DofusDeserializer] = Map(
-    QueueStatusRequestMessage.opcode -> QueueStatusRequestMessage,
-    PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
-    ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage
-  )
-
   def deserialize(o: String): Option[DofusMessage] = o.splitAt(2) match {
     case (opcode, data) => deserializers.get(opcode).flatMap(_.deserialize(data))
   }
@@ -60,4 +55,11 @@ object DofusProtocol {
 
     rec(messages)(StringBuilder.newBuilder)
   }
+
+  val deserializers: Map[String, DofusDeserializer] = Map(
+    QueueStatusRequestMessage.opcode -> QueueStatusRequestMessage,
+    PlayerListRequestMessage.opcode -> PlayerListRequestMessage,
+    ServerSelectionRequestMessage.opcode -> ServerSelectionRequestMessage,
+    AuthRequestMessage.opcode -> AuthRequestMessage
+  )
 }
