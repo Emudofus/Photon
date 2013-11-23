@@ -49,3 +49,28 @@ object RegionalVersionMessage extends DofusDeserializer {
     case _: NumberFormatException => None
   }
 }
+
+case class GiftListRequestMessage(locale: String) extends DofusMessage {
+  def definition = GiftListRequestMessage
+  def serialize(out: Out) = out ++= locale
+}
+
+object GiftListRequestMessage extends DofusDeserializer {
+  val opcode = "Ag"
+  def deserialize(in: In) = Some(GiftListRequestMessage(in))
+}
+
+case class IdentityMessage(identity: String) extends DofusMessage {
+  def definition = IdentityMessage
+  def serialize(out: Out) = out ++= identity
+}
+
+object IdentityMessage extends DofusDeserializer {
+  val opcode = "Ai"
+  def deserialize(in: In) = Some(IdentityMessage(in))
+}
+
+case object PlayerListRequestMessage extends DofusStaticMessage {
+  val opcode = "AL"
+  val data = ???
+}
