@@ -1,20 +1,42 @@
 package org.photon.realm
 
-import org.photon.common.components.{ExecutorComponent, DatabaseComponent}
+import org.photon.common.components.{ServiceManagerComponent, Service, ExecutorComponent, DatabaseComponent}
 import java.sql.{PreparedStatement, ResultSet}
-import org.photon.common.persist.{Incremented, ModelState, BaseRepository}
+import org.photon.common.persist._
+import com.twitter.util.Future
+import org.photon.realm.Player
+import org.photon.realm.Colors
+import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.slf4j.Logger
 
 trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
-  self: DatabaseComponent with ExecutorComponent =>
+  self: DatabaseComponent with ExecutorComponent with ServiceManagerComponent =>
   import org.photon.common.persist.Parameters._
   import org.photon.common.persist.Connections._
 
   implicit val playerRepository = new PlayerRepositoryImpl
+  services += playerRepository
 
-  class PlayerRepositoryImpl extends BaseRepository[Player](self.database) with PlayerRepository {
+  private val logger = Logger(LoggerFactory getLogger classOf[PlayerRepositoryComponentImpl])
+
+  class PlayerRepositoryImpl extends BaseRepository[Player](self.database)
+    with Caching[Player]
+    with PlayerRepository
+    with Service
+  {
     lazy val table = "players"
     lazy val pkColumns = Seq("id")
     lazy val columns = Seq("owner_id", "name", "breed", "level", "skin", "color1", "color2", "color3")
+
+    def boot() = Async {
+      hydrate()
+      logger.info(s"${cache.size} players loaded")
+    }
+
+    def kill() = Async {
+      cache.values.foreach(persist)
+      logger.info(s"${cache.size} players saved")
+    }
 
     def buildModel(rset: ResultSet) = Player(
       rset.getLong("id"),
@@ -47,8 +69,8 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
     def setPersisted(o: Player, newId: Long) = o.copy(id = newId, state = ModelState.Persisted)
     def setRemoved(o: Player) = o.copy(state = ModelState.Removed)
 
-    def findByName(name: String) = findBy("name", name)
-    def findByOwner(ownerId: Long) = filter("owner_id", ownerId)
+    def findByName(name: String) = Future(find(x => x.name == name).get)
+    def findByOwner(ownerId: Long) = Future(filter(x => x.ownerId == ownerId).toSeq)
 
     def create(ownerId: Long, name: String, breed: Short, gender: Boolean, color1: Int, color2: Int, color3: Int) =
       persist(Player(

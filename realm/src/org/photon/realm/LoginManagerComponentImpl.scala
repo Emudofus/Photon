@@ -40,7 +40,6 @@ trait LoginManagerComponentImpl extends LoginManagerComponent {
 
     def boot() = Async {
       sessionOption = Some(acceptor.connect().await().getSession)
-      logger.debug(s"listening on $loginManagerPort")
       logger.info("successfully booted")
     }
 

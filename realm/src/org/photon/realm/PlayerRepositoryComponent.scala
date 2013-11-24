@@ -1,7 +1,7 @@
 package org.photon.realm
 
 import com.twitter.util.Future
-import org.photon.common.persist.{Repository, Model, ModelState}
+import org.photon.common.persist.{Cachable, Repository, Model, ModelState}
 import org.photon.common.persist.ModelState.ModelState
 import org.photon.protocol.dofus.account.{Player => PlayerTemplate}
 
@@ -44,7 +44,7 @@ final case class UnavailableSpaceException() extends RuntimeException
 final case class ExistingPlayerNameException() extends RuntimeException
 final case class BadPlayerNameException() extends RuntimeException
 
-trait PlayerRepository extends Repository[Player] {
+trait PlayerRepository extends Repository[Player] with Cachable[Player] {
   def findByName(name: String): Future[Player]
   def findByOwner(ownerId: Long): Future[Seq[Player]]
 

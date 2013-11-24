@@ -11,5 +11,4 @@ dependencies {
 
     compile project(":common")
     compile project(":protocol")
-    compile project(":static_data")
 }

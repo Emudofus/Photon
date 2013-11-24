@@ -1,1 +1,1 @@
-include "common", "protocol", "login", "realm", "static_data"
+include "common", "protocol", "login", "realm"
