@@ -15,6 +15,7 @@ case class Player(
   id: Long,
   ownerId: Long,
   name: String,
+  breed: Short,
   level: Short,
   appearence: PlayerAppearence,
   state: ModelState = ModelState.None
@@ -38,9 +39,16 @@ case class Player(
   )
 }
 
+final case class SubscriptionOutException() extends RuntimeException
+final case class UnavailableSpaceException() extends RuntimeException
+final case class ExistingPlayerNameException() extends RuntimeException
+final case class BadPlayerNameException() extends RuntimeException
+
 trait PlayerRepository extends Repository[Player] {
   def findByName(name: String): Future[Player]
   def findByOwner(ownerId: Long): Future[Seq[Player]]
+
+  def create(ownerId: Long, name: String, breed: Short, gender: Boolean, color1: Int, color2: Int, color3: Int): Future[Player]
 }
 
 trait PlayerRepositoryComponent {

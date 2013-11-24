@@ -1,21 +1,12 @@
 apply plugin: 'application'
 mainClassName = 'org.photon.login.LoginServer'
 
-repositories {
-	maven {
-        url 'https://raw.github.com/Blackrush/photon-persist/maven-repo'
-	}
-    maven {
-        url 'https://raw.github.com/Blackrush/flatjson/maven-repo'
-    }
-}
-
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
     compile "ch.qos.logback:logback-classic:${logbackVersion}"
     runtime "org.codehaus.groovy:groovy:${groovyVersion}" // required to configure through Groovy DSL
     compile "org.apache.mina:mina-core:${minaVersion}"
-    compile 'org.photon.common:photon-persist:0.1.1'
+    compile "org.photon.common:photon-persist:${photonPersistVersion}"
     runtime jdbcConnector
 
     compile project(":common")

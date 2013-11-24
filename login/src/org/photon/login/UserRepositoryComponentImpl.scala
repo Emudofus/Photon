@@ -3,7 +3,7 @@ package org.photon.login
 import com.twitter.util.Time
 import java.sql.{PreparedStatement, ResultSet}
 import org.photon.common.components.{ExecutorComponent, DatabaseComponent}
-import org.photon.common.persist.{ModelState, BaseRepository}
+import org.photon.common.persist.{Incremented, ModelState, BaseRepository}
 
 trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: DatabaseComponent with ExecutorComponent =>
   import org.photon.common.persist.Parameters._
@@ -27,19 +27,19 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
       rs.get[Time]("subscription_end")
     )
 
-    def bindParams(ps: PreparedStatement, user: User) {
-      ps.set(1, user.name)
-      ps.set(2, user.password)
-      ps.set(3, user.nickname)
-      ps.set(4, user.secretQuestion)
-      ps.set(5, user.secretAnswer)
-      ps.set(6, user.communityId)
-      ps.set(7, user.subscriptionEnd)
+    def bindParams(ps: PreparedStatement, user: User)(implicit index: Incremented[Int]) {
+      ps.set(user.name)
+      ps.set(user.password)
+      ps.set(user.nickname)
+      ps.set(user.secretQuestion)
+      ps.set(user.secretAnswer)
+      ps.set(user.communityId)
+      ps.set(user.subscriptionEnd)
     }
 
     def setPersisted(user: User, newId: Long) = user.copy(id = newId, state = ModelState.Persisted)
     def setRemoved(user: User) = user.copy(state = ModelState.Removed)
 
-    def find(name: String) = find("name", name)
+    def find(name: String) = findBy("name", name)
   }
 }
