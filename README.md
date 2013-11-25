@@ -8,7 +8,7 @@ A Scala Dofus 1.29 emulator
 #### For users
 
 1. Clone this repository with
-2. 
+
   ```sh
   git clone https://github.com/Emudofus/Photon.git
   ```
