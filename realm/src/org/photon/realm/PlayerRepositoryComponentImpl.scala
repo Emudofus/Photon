@@ -4,8 +4,6 @@ import org.photon.common.components.{ServiceManagerComponent, Service, ExecutorC
 import java.sql.{PreparedStatement, ResultSet}
 import org.photon.common.persist._
 import com.twitter.util.Future
-import org.photon.realm.Player
-import org.photon.realm.Colors
 import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.slf4j.Logger
 
@@ -28,9 +26,10 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
     lazy val pkColumns = Seq("id")
     lazy val columns = Seq("owner_id", "name", "breed", "level", "skin", "color1", "color2", "color3")
 
-    def boot() = Async {
-      hydrate()
+    def boot() = hydrate() onSuccess { _ =>
       logger.info(s"${cache.size} players loaded")
+    } onFailure {
+      case ex: Exception => logger.error("can't load players", ex)
     }
 
     def kill() = Async {
@@ -87,6 +86,8 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
             color3
           )
         )
-      ))
+      )) onFailure {
+        case ex: Exception => logger.error(s"can't persist $name of $ownerId", ex)
+      }
   }
 }

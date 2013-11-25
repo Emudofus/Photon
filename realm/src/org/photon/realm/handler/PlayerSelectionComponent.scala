@@ -4,7 +4,6 @@ import org.photon.realm._
 import com.twitter.util.{Throw, Return, Future}
 import org.photon.protocol.dofus.account._
 import org.photon.protocol.dofus.login.QueueStatusRequestMessage
-import com.twitter.util.Throw
 
 trait PlayerSelectionComponent extends BaseHandlerComponent {
   self: ConfigurationComponent with PlayerRepositoryComponent =>
@@ -31,18 +30,21 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
       s ! RandomPlayerNameMessage(name = "Photon")
 
     case Message(s, PlayerCreationRequestMessage(name, breed, gender, color1, color2, color3)) =>
-      playerRepository.create(s.user.id, name, breed.toShort, gender, color1, color2, color3)
-        .join(playerRepository findByOwner s.user.id)
-        .transform {
-          case Return( (player, players) ) => s ! (
-            PlayerCreationSuccessMessage,
-            PlayerListMessage(s.user.subscriptionEnd, players.toStream map { _.toPlayerTemplate })
-          )
+      val a = playerRepository.create(s.user.id, name, breed.toShort, gender, color1, color2, color3)
+      val b = playerRepository findByOwner s.user.id
 
-          case Throw(SubscriptionOutException()) => s ! SubscriptionOutCreationMessage
-          case Throw(UnavailableSpaceException()) => s ! UnavailableSpaceCreationMessage
-          case Throw(ExistingPlayerNameException()) => s ! ExistingPlayerNameCreationMessage
-          case Throw(BadPlayerNameException()) => s ! BadPlayerNameCreationMessage
-        }
+      (a join b) transform {
+        case Return( (player, players) ) => s transaction (
+          PlayerCreationSuccessMessage,
+          PlayerListMessage(s.user.subscriptionEnd, players.toStream.map(_.toPlayerTemplate))
+        )
+
+        case Throw(SubscriptionOutException()) =>     s ! SubscriptionOutCreationMessage
+        case Throw(UnavailableSpaceException()) =>    s ! UnavailableSpaceCreationMessage
+        case Throw(ExistingPlayerNameException()) =>  s ! ExistingPlayerNameCreationMessage
+        case Throw(BadPlayerNameException()) =>       s ! BadPlayerNameCreationMessage
+      }
+
+    case Message(s, PlayerSelectionRequestMessage(playerId)) => ???
   }
 }
