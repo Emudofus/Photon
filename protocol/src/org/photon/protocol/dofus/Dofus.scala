@@ -66,6 +66,7 @@ object DofusProtocol {
     account.PlayerListRequestMessage.opcode -> account.PlayerListRequestMessage,
     account.RandomPlayerNameRequestMessage.opcode -> account.RandomPlayerNameRequestMessage,
     account.RandomPlayerNameMessage.opcode -> account.RandomPlayerNameMessage,
-    account.PlayerCreationRequestMessage.opcode -> account.PlayerCreationRequestMessage
+    account.PlayerCreationRequestMessage.opcode -> account.PlayerCreationRequestMessage,
+    account.PlayerSelectionRequestMessage.opcode -> account.PlayerSelectionRequestMessage
   )
 }

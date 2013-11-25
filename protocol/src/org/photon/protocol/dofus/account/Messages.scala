@@ -148,3 +148,25 @@ case object PlayerCreationSuccessMessage extends DofusStaticMessage {
   val opcode = "AA"
   val data = "K"
 }
+
+case class PlayerSelectionRequestMessage(playerId: Long) extends DofusMessage {
+  def definition = PlayerSelectionRequestMessage
+  def serialize(out: Out) = out append playerId
+}
+
+object PlayerSelectionRequestMessage extends DofusDeserializer {
+  val opcode = "AS"
+  def deserialize(in: In) =
+    try
+      Some(PlayerSelectionRequestMessage(in.toLong))
+    catch {
+      case _: NumberFormatException => None
+    }
+}
+
+abstract class PlayerSelectionMessage(val data: String) extends DofusStaticMessage {
+  val opcode = "AS"
+}
+
+case object PlayerSelectionSuccessMessage extends PlayerSelectionMessage("K")
+case object PlayerSelectionErrorMessage extends PlayerSelectionMessage("E")
