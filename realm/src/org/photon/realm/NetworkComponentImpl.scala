@@ -1,6 +1,6 @@
 package org.photon.realm
 
-import com.twitter.util.Future
+import com.twitter.util.{NonFatal, Future}
 import scala.collection.mutable
 import org.photon.common.Async
 import org.apache.mina.core.session.IoSession
@@ -150,7 +150,9 @@ trait NetworkComponentImpl extends NetworkComponent {
 
       val task = Message(session, o.asInstanceOf[DofusMessage])
       if (networkHandler.isDefinedAt(task)) {
-        networkHandler(task)
+        networkHandler(task) onFailure {
+          case NonFatal(ex) => logger.error(s"unhandled exception ${s.getRemoteAddress}", ex)
+        }
       } else {
         logger.warn(s"no handler found for $o}")
       }
