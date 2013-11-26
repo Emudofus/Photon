@@ -94,12 +94,16 @@ trait NetworkComponentImpl extends NetworkComponent {
       }
     }
 
-    def doFilterWrite(next: NextFilter, s: IoSession, req: WriteRequest) =
-      DofusProtocol.serialize(req.getMessage match {
+    def doFilterWrite(next: NextFilter, s: IoSession, req: WriteRequest) = {
+      val res = DofusProtocol.serialize(req.getMessage match {
         case m: DofusMessage => List(m)
         case m: List[DofusMessage] => m
         case m: Seq[DofusMessage] => m.toList
       })
+
+      logger.trace(s"send [${res.length}] $res to ${s.getRemoteAddress}")
+      res
+    }
   }
 
   class NetworkLoggingImpl extends IoFilterAdapter {

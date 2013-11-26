@@ -10,6 +10,7 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
   import HandlerComponent._
 
   private val communityId = config.getInt("photon.realm.community")
+  private val secretAnswerSinceLevel = config.getInt("photon.realm.secret-answer-since-level")
 
   override def networkHandler = super.networkHandler orElse
     (playerSelectionHandler filter authenticated)
@@ -44,6 +45,22 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
         case Throw(ExistingPlayerNameException()) =>  s ! ExistingPlayerNameCreationMessage
         case Throw(BadPlayerNameException()) =>       s ! BadPlayerNameCreationMessage
       }
+
+    case Message(s, PlayerDeletionRequestMessage(playerId, secretAnswer)) => playerRepository.find(playerId) flatMap { player =>
+      if (player.level >= secretAnswerSinceLevel && s.user.secretAnswer != secretAnswer) {
+        s ! PlayerDeletionErrorMessage
+      } else {
+        playerRepository.remove(player) transform {
+          case Return(_) => playerRepository.findByOwner(s.user.id) flatMap { players =>
+            s transaction (
+              PlayerDeletionSuccessMessage,
+              PlayerListMessage(s.user.subscriptionEnd, players.toStream.map(_.toPlayerTemplate))
+            )
+          }
+          case Throw(_) => s ! PlayerDeletionErrorMessage
+        }
+      }
+    }
 
     case Message(s, PlayerSelectionRequestMessage(playerId)) => ???
   }

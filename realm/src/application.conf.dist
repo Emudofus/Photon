@@ -27,5 +27,6 @@ photon {
 
     realm {
         community = 0
+        secret-answer-since-level = 20
     }
 }
