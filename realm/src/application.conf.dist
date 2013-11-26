@@ -28,5 +28,6 @@ photon {
     realm {
         community = 0
         secret-answer-since-level = 20
+        max-players-per-user = 5
     }
 }

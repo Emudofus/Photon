@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.slf4j.Logger
 
 trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
-  self: DatabaseComponent with ExecutorComponent with ServiceManagerComponent =>
+  self: DatabaseComponent with ExecutorComponent with ServiceManagerComponent with ConfigurationComponent =>
   import org.photon.common.persist.Parameters._
   import org.photon.common.persist.Connections._
 
@@ -16,6 +16,7 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
   services += playerRepository
 
   private val logger = Logger(LoggerFactory getLogger classOf[PlayerRepositoryComponentImpl])
+  private val maxPlayersPerUser = config.getInt("photon.realm.max-players-per-user")
 
   class PlayerRepositoryImpl extends BaseRepository[Player](self.database)
     with Caching[Player]
@@ -71,23 +72,28 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
     def findByName(name: String) = Future(find(x => x.name == name).get)
     def findByOwner(ownerId: Long) = Future(filter(x => x.ownerId == ownerId).toSeq)
 
-    def create(ownerId: Long, name: String, breed: Short, gender: Boolean, color1: Int, color2: Int, color3: Int) =
-      persist(Player(
-        -1L,
-        ownerId,
-        name,
-        breed,
-        1,
-        new PlayerAppearence(
-          (10 * breed + (if (gender) 1 else 0)).toShort,
-          Colors(
-            color1,
-            color2,
-            color3
+    def create(ownerId: Long, name: String, breed: Short, gender: Boolean, color1: Int, color2: Int, color3: Int) = {
+      if (find(x => x.name == name).isDefined) {
+        Future.exception(ExistingPlayerNameException())
+      } else if (filter(x => x.ownerId == ownerId).size >= maxPlayersPerUser) {
+        Future.exception(UnavailableSpaceException())
+      } else {
+        persist(Player(
+          -1L,
+          ownerId,
+          name,
+          breed,
+          1,
+          new PlayerAppearence(
+            (10 * breed + (if (gender) 1 else 0)).toShort,
+            Colors(
+              color1,
+              color2,
+              color3
+            )
           )
-        )
-      )) onFailure {
-        case ex: Exception => logger.error(s"can't persist $name of $ownerId", ex)
+        ))
       }
+    }
   }
 }
