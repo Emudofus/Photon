@@ -25,4 +25,13 @@ package object dofus {
         case _: NumberFormatException => None
       }
   }
+
+  object Long {
+    def unapply(s: String): Option[Long] =
+      try {
+        Some(s.toLong)
+      } catch {
+        case _: NumberFormatException => None
+      }
+  }
 }

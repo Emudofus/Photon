@@ -156,12 +156,10 @@ case class PlayerSelectionRequestMessage(playerId: Long) extends DofusMessage {
 
 object PlayerSelectionRequestMessage extends DofusDeserializer {
   val opcode = "AS"
-  def deserialize(in: In) =
-    try
-      Some(PlayerSelectionRequestMessage(in.toLong))
-    catch {
-      case _: NumberFormatException => None
-    }
+  def deserialize(in: In) = in match {
+    case Int(playerId) => Some(PlayerSelectionRequestMessage(playerId))
+    case _ => None
+  }
 }
 
 abstract class PlayerSelectionMessage(val data: String) extends DofusStaticMessage {
@@ -170,3 +168,25 @@ abstract class PlayerSelectionMessage(val data: String) extends DofusStaticMessa
 
 case object PlayerSelectionSuccessMessage extends PlayerSelectionMessage("K")
 case object PlayerSelectionErrorMessage extends PlayerSelectionMessage("E")
+
+case class PlayerDeletionRequestMessage(playerId: Long, secretAnswer: String) extends DofusMessage {
+  def definition = PlayerDeletionRequestMessage
+  def serialize(out: Out) = out append (playerId) append (secretAnswer)
+}
+
+object PlayerDeletionRequestMessage extends DofusDeserializer {
+  val opcode = "AD"
+  def deserialize(in: In) = in.split("\\|", 2) match {
+    case Array(Long(playerId), secretAnswer) =>
+      Some(PlayerDeletionRequestMessage(playerId, secretAnswer))
+    case _ =>
+      None
+  }
+}
+
+abstract class PlayerDeletionMessage(val data: String) extends DofusStaticMessage {
+  val opcode = "AD"
+}
+
+case object PlayerDeletionSuccessMessage extends PlayerDeletionMessage("K")
+case object PlayerDeletionErrorMessage extends PlayerDeletionMessage("E")
