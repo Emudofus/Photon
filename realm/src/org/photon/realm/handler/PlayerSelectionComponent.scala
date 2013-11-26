@@ -30,13 +30,13 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
       s ! RandomPlayerNameMessage(name = "Photon")
 
     case Message(s, PlayerCreationRequestMessage(name, breed, gender, color1, color2, color3)) =>
-      val a = playerRepository.create(s.user.id, name, breed.toShort, gender, color1, color2, color3)
-      val b = playerRepository findByOwner s.user.id
+      val a = playerRepository findByOwner s.user.id
+      val b = playerRepository.create(s.user.id, name, breed.toShort, gender, color1, color2, color3)
 
       (a join b) transform {
-        case Return( (player, players) ) => s transaction (
+        case Return( (players, player) ) => s transaction (
           PlayerCreationSuccessMessage,
-          PlayerListMessage(s.user.subscriptionEnd, players.toStream.map(_.toPlayerTemplate))
+          PlayerListMessage(s.user.subscriptionEnd, (players :+ player).toStream.map(_.toPlayerTemplate))
         )
 
         case Throw(SubscriptionOutException()) =>     s ! SubscriptionOutCreationMessage
