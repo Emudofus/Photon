@@ -5,7 +5,7 @@ import com.twitter.util.{Throw, Return, Future}
 import org.photon.protocol.dofus.account._
 import org.photon.protocol.dofus.login.QueueStatusRequestMessage
 
-trait PlayerSelectionComponent extends BaseHandlerComponent {
+trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
   self: ConfigurationComponent with PlayerRepositoryComponent =>
   import HandlerComponent._
 
