@@ -166,8 +166,41 @@ abstract class PlayerSelectionMessage(val data: String) extends DofusStaticMessa
   val opcode = "AS"
 }
 
-case object PlayerSelectionSuccessMessage extends PlayerSelectionMessage("K")
-case object PlayerSelectionErrorMessage extends PlayerSelectionMessage("E")
+case object PlayerSelectionErrorMessage extends DofusStaticMessage {
+  val opcode = "AS"
+  val data = "E"
+}
+
+case class PlayerSelectionSuccessMessage(
+  id: Long,
+  name: String,
+  level: Short,
+  breed: Short,
+  gender: Boolean,
+  skin: Short,
+  color1: Int,
+  color2: Int,
+  color3: Int
+) extends DofusMessage {
+  def definition = PlayerSelectionSuccessMessage
+  def serialize(out: Out) {
+    out append id append '|'
+    out append name append '|'
+    out append level append '|'
+    out append breed append '|'
+    out append btoi(gender) append '|'
+    out append skin append '|'
+    out append hex(color1) append '|'
+    out append hex(color2) append '|'
+    out append hex(color3) append '|'
+    // TODO items
+  }
+}
+
+object PlayerSelectionSuccessMessage extends DofusDeserializer {
+  val opcode = "ASK"
+  def deserialize(in: In) = None // not gonna happen bro
+}
 
 case class PlayerDeletionRequestMessage(playerId: Long, secretAnswer: String) extends DofusMessage {
   def definition = PlayerDeletionRequestMessage
