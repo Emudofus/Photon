@@ -66,7 +66,19 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
       case Return(player) =>
         s.playerOption = Some(player)
 
-        s ! PlayerSelectionSuccessMessage
+        s ! PlayerSelectionSuccessMessage(
+          player.id,
+          player.name,
+          player.level,
+          player.breed,
+          player.gender,
+          player.appearence.skin,
+          player.appearence.colors.first,
+          player.appearence.colors.second,
+          player.appearence.colors.third
+        )
+
+        // TODO player selection, send more
       case Throw(_) => s ! PlayerSelectionErrorMessage
     }
   }
