@@ -68,6 +68,8 @@ object DofusProtocol {
     account.RandomPlayerNameMessage.opcode -> account.RandomPlayerNameMessage,
     account.PlayerCreationRequestMessage.opcode -> account.PlayerCreationRequestMessage,
     account.PlayerSelectionRequestMessage.opcode -> account.PlayerSelectionRequestMessage,
-    account.PlayerDeletionRequestMessage.opcode -> account.PlayerDeletionRequestMessage
+    account.PlayerDeletionRequestMessage.opcode -> account.PlayerDeletionRequestMessage,
+
+    basics.CurrentDateRequestMessage.opcode -> basics.CurrentDateRequestMessage
   )
 }
