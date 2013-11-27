@@ -25,7 +25,7 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
   {
     lazy val table = "players"
     lazy val pkColumns = Seq("id")
-    lazy val columns = Seq("owner_id", "name", "breed", "level", "skin", "color1", "color2", "color3")
+    lazy val columns = Seq("owner_id", "name", "breed", "gender", "level", "skin", "color1", "color2", "color3")
 
     def boot() = hydrate() onSuccess { _ =>
       logger.info(s"${cache.size} players loaded")
@@ -43,6 +43,7 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
       rset.getLong("owner_id"),
       rset.getString("name"),
       rset.getShort("breed"),
+      rset.getBoolean("gender"),
       rset.getShort("level"),
       new PlayerAppearence(
         rset.getShort("skin"),
@@ -59,6 +60,7 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
       ps.set(user.ownerId)
       ps.set(user.name)
       ps.set(user.breed)
+      ps.set(user.gender)
       ps.set(user.level)
       ps.set(user.appearence.skin)
       ps.set(user.appearence.colors.first)
@@ -83,6 +85,7 @@ trait PlayerRepositoryComponentImpl extends PlayerRepositoryComponent {
           ownerId,
           name,
           breed,
+          gender,
           1,
           new PlayerAppearence(
             (10 * breed + (if (gender) 1 else 0)).toShort,

@@ -16,6 +16,7 @@ case class Player(
   ownerId: Long,
   name: String,
   breed: Short,
+  gender: Boolean,
   level: Short,
   appearence: PlayerAppearence,
   state: ModelState = ModelState.None
