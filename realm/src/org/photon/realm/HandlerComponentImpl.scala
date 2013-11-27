@@ -1,12 +1,13 @@
 package org.photon.realm
 
 import com.twitter.util.Future
-import org.photon.realm.handler.{PlayerSelectionHandlerComponent, AuthHandlerComponent}
+import org.photon.realm.handler.{InGameHandlerComponent, PlayerSelectionHandlerComponent, AuthHandlerComponent}
 import org.photon.protocol.dofus.account.HelloGameMessage
 
 trait HandlerComponentImpl extends BaseHandlerComponent
   with AuthHandlerComponent
   with PlayerSelectionHandlerComponent
+  with InGameHandlerComponent
 {
   self: NetworkComponent
     with ConfigurationComponent
