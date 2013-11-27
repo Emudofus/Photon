@@ -13,7 +13,7 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
   private val secretAnswerSinceLevel = config.getInt("photon.realm.secret-answer-since-level")
 
   override def networkHandler = super.networkHandler orElse
-    (playerSelectionHandler filter authenticated)
+    (playerSelectionHandler filter authenticated filter notPlaying)
 
   def playerSelectionHandler: NetworkHandler = {
     case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
@@ -62,6 +62,12 @@ trait PlayerSelectionComponent extends BaseHandlerComponent {
       }
     }
 
-    case Message(s, PlayerSelectionRequestMessage(playerId)) => ???
+    case Message(s, PlayerSelectionRequestMessage(playerId)) => playerRepository.find(playerId) transform {
+      case Return(player) =>
+        s.playerOption = Some(player)
+
+        s ! PlayerSelectionSuccessMessage
+      case Throw(_) => s ! PlayerSelectionErrorMessage
+    }
   }
 }
