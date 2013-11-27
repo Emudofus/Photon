@@ -73,6 +73,7 @@ trait NetworkComponentImpl extends NetworkComponent {
 
   class NetworkSessionImpl(underlying: IoSession) extends NetworkSession {
     var userOption: Option[UserInfos] = None
+    var playerOption: Option[Player] = None
 
     def service = networkService
     def remoteAddress = underlying.getRemoteAddress

@@ -19,6 +19,9 @@ trait NetworkService extends base.NetworkService {
 trait NetworkSession extends base.NetworkSession {
   var userOption: Option[UserInfos]
   def user = userOption.get
+
+  var playerOption: Option[Player]
+  def player = playerOption.get
 }
 
 trait NetworkComponent {

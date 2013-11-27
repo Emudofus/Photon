@@ -43,6 +43,20 @@ object HandlerComponent {
 
     req
   }
+
+  def playing(req: Req) = authenticated(req) map { req =>
+    if (req.session.playerOption.isEmpty)
+      throw new IllegalStateException(s"session ${req.session.remoteAddress} must be playing (user ${req.session.user.id})")
+
+    req
+  }
+
+  def notPlaying(req: Req) = Future {
+    if (req.session.playerOption.isDefined)
+      throw new IllegalStateException(s"session ${req.session.remoteAddress} must not be playing")
+
+    req
+  }
 }
 
 trait HandlerComponent {
