@@ -79,6 +79,7 @@ object DofusProtocol {
     friends.ToggleConnectionListenerMessage.opcode -> friends.ToggleConnectionListenerMessage,
 
     game.GameContextCreationMessage.opcode -> game.GameContextCreationMessage,
+    game.GameContextDescriptionMessage.opcode -> game.GameContextDescriptionMessage,
 
     infos.ScreenResolutionMessage.opcode -> infos.ScreenResolutionMessage,
 
