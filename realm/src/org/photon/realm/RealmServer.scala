@@ -1,39 +1,27 @@
 package org.photon.realm
 
-import org.photon.common.components.{DatabaseComponentImpl, ExecutorComponentImpl, Service, ServiceManagerComponent}
-import com.twitter.util.{Await, Future}
+import org.photon.common.components._
 import com.typesafe.config.ConfigFactory
 import java.io.File
 
-object RealmServer {
-  def main(args: Array[String]) {
-    val component = new Object
-      with ConfigurationComponent
-      with ServiceManagerComponent
-      with DatabaseComponentImpl
-      with ExecutorComponentImpl
-      with PlayerRepositoryComponentImpl
-      with LoginManagerComponentImpl
-      with HandlerComponentImpl
-      with NetworkComponentImpl
-    {
-      lazy val config = sys.props.get("photon.config")
-        .map { file => ConfigFactory.parseFile(new File(file)) }
-        .getOrElse(ConfigFactory.empty())
-        .withFallback(ConfigFactory.load())
+trait RealmServerComponent extends AnyRef
+  with ConfigurationComponent
+  with ServiceManagerComponent
+  with DatabaseComponentImpl
+  with ExecutorComponentImpl
+  with PlayerRepositoryComponentImpl
+  with LoginManagerComponentImpl
+  with HandlerComponentImpl
+  with NetworkComponentImpl
 
-      lazy val databaseUrl = config.getString("photon.database.url")
-      lazy val databaseDriver = config.getString("photon.database.driver")
+object RealmServer extends RealmServerComponent with BootableComponent {
+  lazy val config = sys.props.get("photon.config")
+    .map { file => ConfigFactory.parseFile(new File(file)) }
+    .getOrElse(ConfigFactory.empty())
+    .withFallback(ConfigFactory.load())
 
-      lazy val services = Seq.newBuilder[Service]
-    }
+  lazy val databaseUrl = config.getString("photon.database.url")
+  lazy val databaseDriver = config.getString("photon.database.driver")
 
-    val services = component.services.result()
-
-    Future.collect(services map {_.boot()}) onSuccess { _ =>
-      sys.addShutdownHook {
-        Await result Future.collect(services map {_.kill()})
-      }
-    }
-  }
+  def main(args: Array[String]) = boot()
 }

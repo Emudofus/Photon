@@ -1,7 +1,7 @@
 package org.photon.common.components
 
 import com.twitter.util.Future
-import scala.collection.mutable
+import scala.collection.{TraversableLike, mutable}
 
 trait Service {
   def boot(): Future[Unit]
@@ -9,5 +9,5 @@ trait Service {
 }
 
 trait ServiceManagerComponent {
-  def services: mutable.Builder[Service, _]
+  def services: mutable.Builder[Service, _ <: TraversableLike[Service, _]]
 }
