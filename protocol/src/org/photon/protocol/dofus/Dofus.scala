@@ -78,6 +78,10 @@ object DofusProtocol {
 
     friends.ToggleConnectionListenerMessage.opcode -> friends.ToggleConnectionListenerMessage,
 
+    game.GameContextCreationMessage.opcode -> game.GameContextCreationMessage,
+
+    infos.ScreenResolutionMessage.opcode -> infos.ScreenResolutionMessage,
+
     items.UpdateWeightMessage.opcode -> items.UpdateWeightMessage,
 
     spells.SpellListMessage.opcode -> spells.SpellListMessage
