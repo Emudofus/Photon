@@ -4,6 +4,11 @@ import org.photon.realm._
 import com.twitter.util.{Throw, Return, Future}
 import org.photon.protocol.dofus.account._
 import org.photon.protocol.dofus.login.QueueStatusRequestMessage
+import org.photon.protocol.dofus.chat.UpdateChannelListMessage
+import org.photon.protocol.dofus.spells.SpellListMessage
+import org.photon.protocol.dofus.emotes.EmoteListMessage
+import org.photon.protocol.dofus.items.UpdateWeightMessage
+import org.photon.protocol.dofus.friends.ToggleConnectionListenerMessage
 
 trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
   self: ConfigurationComponent with PlayerRepositoryComponent =>
@@ -66,19 +71,25 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
       case Return(player) =>
         s.playerOption = Some(player)
 
-        s ! PlayerSelectionSuccessMessage(
-          player.id,
-          player.name,
-          player.level,
-          player.breed,
-          player.gender,
-          player.appearence.skin,
-          player.appearence.colors.first,
-          player.appearence.colors.second,
-          player.appearence.colors.third
+        s transaction (
+          PlayerSelectionSuccessMessage(
+            player.id,
+            player.name,
+            player.level,
+            player.breed,
+            player.gender,
+            player.appearence.skin,
+            player.appearence.colors.first,
+            player.appearence.colors.second,
+            player.appearence.colors.third
+          ),
+          UpdateChannelListMessage(Seq.empty, add = true), // TODO channels
+          SpellListMessage(Seq.empty), // TODO spells
+          EmoteListMessage(Seq.empty), // TODO emotes
+          UpdateWeightMessage(current = 0, max = 0), // TODO items
+          ToggleConnectionListenerMessage(enable = false) // TODO friends
+          // TODO motd, last connection, rules, etc
         )
-
-        // TODO player selection, send more
       case Throw(_) => s ! PlayerSelectionErrorMessage
     }
   }
