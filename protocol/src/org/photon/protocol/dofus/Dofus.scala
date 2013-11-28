@@ -70,6 +70,16 @@ object DofusProtocol {
     account.PlayerSelectionRequestMessage.opcode -> account.PlayerSelectionRequestMessage,
     account.PlayerDeletionRequestMessage.opcode -> account.PlayerDeletionRequestMessage,
 
-    basics.CurrentDateRequestMessage.opcode -> basics.CurrentDateRequestMessage
+    basics.CurrentDateRequestMessage.opcode -> basics.CurrentDateRequestMessage,
+
+    chat.UpdateChannelListMessage.opcode -> chat.UpdateChannelListMessage,
+
+    emotes.EmoteListMessage.opcode -> emotes.EmoteListMessage,
+
+    friends.ToggleConnectionListenerMessage.opcode -> friends.ToggleConnectionListenerMessage,
+
+    items.UpdateWeightMessage.opcode -> items.UpdateWeightMessage,
+
+    spells.SpellListMessage.opcode -> spells.SpellListMessage
   )
 }
