@@ -3,12 +3,12 @@ package org.photon.realm.handler
 import org.photon.realm._
 import com.twitter.util.{Throw, Return, Future}
 import org.photon.protocol.dofus.account._
-import org.photon.protocol.dofus.login.QueueStatusRequestMessage
-import org.photon.protocol.dofus.chat.UpdateChannelListMessage
+import org.photon.protocol.dofus.chat.{SystemChatMessage, UpdateChannelListMessage}
 import org.photon.protocol.dofus.spells.SpellListMessage
 import org.photon.protocol.dofus.emotes.EmoteListMessage
 import org.photon.protocol.dofus.items.UpdateWeightMessage
 import org.photon.protocol.dofus.friends.ToggleConnectionListenerMessage
+import org.photon.protocol.dofus.infos.{CurrentAddressInfo, WelcomeInfo, InfoMessage}
 
 trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
   self: ConfigurationComponent with PlayerRepositoryComponent =>
@@ -16,12 +16,12 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 
   private val communityId = config.getInt("photon.realm.community")
   private val secretAnswerSinceLevel = config.getInt("photon.realm.secret-answer-since-level")
+  private val motd = config.getString("photon.realm.motd")
 
   override def networkHandler = super.networkHandler orElse
     (playerSelectionHandler filter authenticated filter notPlaying)
 
   def playerSelectionHandler: NetworkHandler = {
-    case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
     case Message(s, GiftListRequestMessage(locale)) => Future.Done // TODO gifts
     case Message(s, IdentityMessage(identity)) => Future.Done // useless
 
@@ -87,8 +87,10 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
           SpellListMessage(Seq.empty), // TODO spells
           EmoteListMessage(Seq.empty), // TODO emotes
           UpdateWeightMessage(current = 0, max = 0), // TODO items
-          ToggleConnectionListenerMessage(enable = false) // TODO friends
-          // TODO motd, last connection, rules, etc
+          ToggleConnectionListenerMessage(enable = false), // TODO friends
+          InfoMessage(WelcomeInfo),
+          InfoMessage(CurrentAddressInfo(s.remoteAddress.toString)),
+          SystemChatMessage(motd)
         )
       case Throw(_) => s ! PlayerSelectionErrorMessage
     }

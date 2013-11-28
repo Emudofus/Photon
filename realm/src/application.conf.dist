@@ -29,5 +29,6 @@ photon {
         community = 0
         secret-answer-since-level = 20
         max-players-per-user = 5
+        motd = "Welcome to Photon `master' version"
     }
 }
