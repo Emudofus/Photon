@@ -3,7 +3,6 @@ package org.photon.login
 import org.apache.mina.core.future.{IoFutureListener, IoFuture}
 import com.twitter.util.{Future, Promise}
 import org.apache.mina.core.session.IoSession
-import scala.reflect.ClassTag
 
 object MinaConversion {
   implicit def fn2IoFutureListener[T <: IoFuture, R](fn: T => R) = new IoFutureListener[T] {

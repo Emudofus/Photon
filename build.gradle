@@ -1,8 +1,7 @@
-allprojects {
+subprojects {
     version = '1.0-master'
 
     apply plugin: 'scala'
-    apply plugin: 'idea'
 
     repositories {
         mavenCentral()
@@ -18,26 +17,14 @@ allprojects {
 
     sourceSets {
         main {
-            java {
-				srcDirs = ['src']
-			}
-            scala {
-                srcDirs = ['src']
-            }
-            resources {
-                srcDirs = ['src']
-            }
+            java.srcDirs = ['main/src']
+            scala.srcDirs = ['main/src']
+            resources.srcDirs = ['main/res']
         }
         test {
-			java {
-				srcDirs = ['test']
-			}
-            scala {
-                srcDirs = ['test']
-            }
-			resources {
-				srcDirs = ['src']
-			}
+			java.srcDirs = ['test/src']
+            scala.srcDirs = ['test/src']
+			resources.srcDirs = ['test/res']
         }
     }
 }
