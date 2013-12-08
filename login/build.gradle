@@ -1,6 +1,3 @@
-apply plugin: 'application'
-mainClassName = 'org.photon.login.LoginServer'
-
 dependencies {
     compile "com.typesafe:config:${typesafeConfigVersion}"
     compile "ch.qos.logback:logback-classic:${logbackVersion}"
@@ -12,3 +9,15 @@ dependencies {
     compile project(":common")
     compile project(":protocol")
 }
+
+buildscript {
+    dependencies {
+        classpath 'com.googlecode.flyway:flyway-gradle-plugin:2.2.1'
+        classpath jdbcConnector
+    }
+}
+
+apply plugin: 'application'
+mainClassName = 'org.photon.login.LoginServer'
+
+apply plugin: 'flyway'

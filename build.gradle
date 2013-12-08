@@ -15,6 +15,12 @@ subprojects {
         compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
     }
 
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    }
+
     sourceSets {
         main {
             java.srcDirs = ['main/src']
