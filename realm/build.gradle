@@ -18,6 +18,6 @@ buildscript {
 }
 
 apply plugin: 'application'
-mainClassName = 'org.photon.login.LoginServer'
+mainClassName = 'org.photon.realm.RealmServer'
 
 apply plugin: 'flyway'
