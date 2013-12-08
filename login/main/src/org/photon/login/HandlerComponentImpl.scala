@@ -15,7 +15,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 
 	private val logger = Logger(LoggerFactory getLogger classOf[HandlerComponentImpl])
 
-	def connections: NetworkHandler = {
+	handle() {
 		case Connect(s) =>
 			s ! HelloConnectMessage(s.ticket)
 
@@ -26,7 +26,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	def versionHandler: NetworkHandler = {
+	handle() {
 		case Message(s, VersionMessage(DofusProtocol.version)) =>
 			s.state = AuthenticationState
 			Future.Done
@@ -38,7 +38,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	def authHandler: NetworkHandler = {
+	handle() {
 		case Message(s, AuthenticationMessage(username, password)) =>
 			require(s.userOption.isEmpty, s"expected a non-logged client ${s.remoteAddress}")
 
@@ -80,7 +80,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	def realmHandler: NetworkHandler = {
+	handle(authenticated) {
 		case Message(s, QueueStatusRequestMessage) => Future.Done
 
 		case Message(s, PlayerListRequestMessage) => realmManager.playerList(s.user) flatMap {
@@ -103,8 +103,4 @@ trait HandlerComponentImpl extends HandlerComponent {
 			case None => s !! ServerSelectionErrorMessage
 		}
 	}
-
-
-
-	val networkHandler = connections orElse versionHandler orElse authHandler orElse realmHandler
 }
