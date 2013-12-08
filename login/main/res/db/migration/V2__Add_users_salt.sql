@@ -1,4 +1,4 @@
-# http://stackoverflow.com/questions/3970795/how-do-you-create-a-random-string-in-postgresql#3972983
+-- http://stackoverflow.com/questions/3970795/how-do-you-create-a-random-string-in-postgresql#3972983
 create function photon_random_users_salt(length integer) returns text as
 $$
 declare
@@ -16,4 +16,4 @@ begin
 end;
 $$ language plpgsql;
 
-alter table users add column salt char(${users_salt_length}) not null default random_string(${users_salt_length});
+alter table users add column salt char(${users_salt_length}) not null default photon_random_users_salt(${users_salt_length});
