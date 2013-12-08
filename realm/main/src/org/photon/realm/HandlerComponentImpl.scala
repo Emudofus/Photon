@@ -14,9 +14,8 @@ trait HandlerComponentImpl extends BaseHandlerComponent
 		with PlayerRepositoryComponent =>
 
 	import HandlerComponent._
-	override def networkHandler = connections orElse super.networkHandler
 
-	def connections: NetworkHandler = {
+	handle() {
 		case Connect(s) => s ! HelloGameMessage
 		case Disconnect(s) => Future.Done
 	}

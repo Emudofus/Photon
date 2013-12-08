@@ -11,19 +11,15 @@ trait AuthHandlerComponent extends BaseHandlerComponent {
 	import HandlerComponent._
 	private val logger = Logger(LoggerFactory getLogger classOf[AuthHandlerComponent])
 
-	override def networkHandler = super.networkHandler orElse
-		(authHandler filter nonAuthenticated)
+	handle(nonAuthenticated) { case Message(s, AuthRequestMessage(ticket)) =>
+		networkService.auth(ticket) transform {
+			case Return(user) =>
+				s.userOption = Some(user)
+				s ! AuthMessage(success = true)
 
-	def authHandler: NetworkHandler = {
-		case Message(s, AuthRequestMessage(ticket)) =>
-			networkService.auth(ticket) transform {
-				case Return(user) =>
-					s.userOption = Some(user)
-					s ! AuthMessage(success = true)
-
-				case Throw(AuthException(reason, underlying)) =>
-					logger.debug(s"can't auth ${s.remoteAddress} because : $reason", underlying)
-					s ! AuthMessage(success = false)
-			}
+			case Throw(AuthException(reason, underlying)) =>
+				logger.debug(s"can't auth ${s.remoteAddress} because : $reason", underlying)
+				s ! AuthMessage(success = false)
+		}
 	}
 }

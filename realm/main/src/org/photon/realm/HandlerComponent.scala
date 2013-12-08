@@ -2,6 +2,7 @@ package org.photon.realm
 
 import org.photon.protocol.dofus.DofusMessage
 import com.twitter.util.Future
+import scala.annotation.tailrec
 
 object HandlerComponent {
 	sealed trait Req {
@@ -13,54 +14,66 @@ object HandlerComponent {
 	case class Message(session: NetworkSession, o: DofusMessage) extends Req
 
 	type NetworkHandler = PartialFunction[Req, Future[_]]
-	type Filter = Req => Future[Req]
+	type NetworkFilter = PartialFunction[Req, Future[Req]]
 
-	private def filter(fn: NetworkHandler, f: Filter): NetworkHandler = {
-		case req if fn.isDefinedAt(req) =>
-			f(req) flatMap { it => fn(it) }
+	val emptyFilter: NetworkFilter = PartialFunction.empty
+
+	val authenticated: NetworkFilter = {
+		case req if req.session.userOption.isDefined => Future(req)
+		case req => Future exception new IllegalStateException(s"${req.session.remoteAddress} must be authenticated")
 	}
 
-	implicit class RichNetworkHandler(val fn: NetworkHandler) extends AnyVal {
-		def filter(f: Filter): NetworkHandler = HandlerComponent.filter(fn, f)
+	val nonAuthenticated: NetworkFilter = {
+		case req if req.session.userOption.isEmpty => Future(req)
+		case req => Future exception new IllegalStateException(s"${req.session.remoteAddress} must not be authenticated")
 	}
 
-	def nonAuthenticated(req: Req) = Future {
-		if (req.session.userOption.nonEmpty)
-			throw new IllegalStateException(s"session ${req.session.remoteAddress} must not be authenticated (user ${req.session.user.id})")
-
-		req
+	val playing: NetworkFilter = {
+		case req if req.session.playerOption.isDefined => Future(req)
+		case req => Future exception new IllegalStateException(s"${req.session.remoteAddress} must be playing")
 	}
 
-	def authenticated(req: Req) = Future {
-		if (req.session.userOption.isEmpty)
-			throw new IllegalStateException(s"session ${req.session.remoteAddress} must be authenticated")
-
-		req
+	val notPlaying: NetworkFilter = {
+		case req if req.session.playerOption.isEmpty => Future(req)
+		case req => Future exception new IllegalStateException(s"${req.session.remoteAddress} must not be playing")
 	}
 
-	def playing(req: Req) = authenticated(req) map { req =>
-		if (req.session.playerOption.isEmpty)
-			throw new IllegalStateException(s"session ${req.session.remoteAddress} must be playing (user ${req.session.user.id})")
-
-		req
+	def NetworkFilter_&&(self: NetworkFilter, other: NetworkFilter): NetworkFilter = {
+		case req => self(req).flatMap(other)
 	}
 
-	def notPlaying(req: Req) = Future {
-		if (req.session.playerOption.isDefined)
-			throw new IllegalStateException(s"session ${req.session.remoteAddress} must not be playing")
-
-		req
+	implicit class RichNetworkFilter(val self: NetworkFilter) extends AnyVal {
+		def &&(other: NetworkFilter): NetworkFilter = NetworkFilter_&&(self, other)
 	}
 }
 
 trait HandlerComponent {
 	import HandlerComponent._
 
-	def networkHandler: NetworkHandler
+	val networkHandler: NetworkHandler
 }
 
 trait BaseHandlerComponent extends HandlerComponent {
 	import HandlerComponent._
 
-	def networkHandler: NetworkHandler = PartialFunction.empty
+	private[this] val networkHandlerBuilder = List.newBuilder[NetworkHandler]
+	lazy val networkHandler: NetworkHandler = {
+		@tailrec
+		def rec(head: NetworkHandler, tail: List[NetworkHandler]): NetworkHandler = tail match {
+			case h :: t => rec(head orElse h, t)
+			case Nil => head
+		}
+
+		rec(PartialFunction.empty, networkHandlerBuilder.result())
+	}
+
+	def handle(filter: NetworkFilter = emptyFilter)(handler: NetworkHandler) {
+		networkHandlerBuilder += (filter match {
+			case `emptyFilter` => handler
+			case _ => {
+				case req if handler.isDefinedAt(req) =>
+					filter(req) flatMap { r => handler(r) }
+			}
+		})
+	}
 }

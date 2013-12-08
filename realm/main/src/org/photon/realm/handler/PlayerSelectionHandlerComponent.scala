@@ -18,20 +18,23 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 	private val secretAnswerSinceLevel = config.getInt("photon.realm.secret-answer-since-level")
 	private val motd = config.getString("photon.realm.motd")
 
-	override def networkHandler = super.networkHandler orElse
-		(playerSelectionHandler filter authenticated filter notPlaying)
-
-	def playerSelectionHandler: NetworkHandler = {
+	handle(authenticated && notPlaying) {
 		case Message(s, GiftListRequestMessage(locale)) => Future.Done // TODO gifts
+
 		case Message(s, IdentityMessage(identity)) => Future.Done // useless
 
 		case Message(s, RegionalVersionRequestMessage) =>
 			s ! RegionalVersionMessage(communityId)
+	}
 
+	handle(authenticated && notPlaying) {
+
+		// READ
 		case Message(s, PlayerListRequestMessage) => playerRepository.findByOwner(s.user.id) flatMap { players =>
 			s ! PlayerListMessage(s.user.subscriptionEnd, players.toStream map { _.toPlayerTemplate })
 		}
 
+		// CREATE
 		case Message(s, RandomPlayerNameRequestMessage) =>
 			s ! RandomPlayerNameMessage(name = "Photon")
 
@@ -43,7 +46,7 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 				case Return( (players, player) ) => s transaction (
 					PlayerCreationSuccessMessage,
 					PlayerListMessage(s.user.subscriptionEnd, (players :+ player).toStream.map(_.toPlayerTemplate))
-					)
+				)
 
 				case Throw(SubscriptionOutException()) =>     s ! SubscriptionOutCreationMessage
 				case Throw(UnavailableSpaceException()) =>    s ! UnavailableSpaceCreationMessage
@@ -51,6 +54,7 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 				case Throw(BadPlayerNameException()) =>       s ! BadPlayerNameCreationMessage
 			}
 
+		// DELETE
 		case Message(s, PlayerDeletionRequestMessage(playerId, secretAnswer)) => playerRepository.find(playerId) flatMap { player =>
 			if (player.level >= secretAnswerSinceLevel && s.user.secretAnswer != secretAnswer) {
 				s ! PlayerDeletionErrorMessage
@@ -60,13 +64,14 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 						s transaction (
 							PlayerDeletionSuccessMessage,
 							PlayerListMessage(s.user.subscriptionEnd, players.toStream.map(_.toPlayerTemplate))
-							)
+						)
 					}
 					case Throw(_) => s ! PlayerDeletionErrorMessage
 				}
 			}
 		}
 
+		// SELECTION
 		case Message(s, PlayerSelectionRequestMessage(playerId)) => playerRepository.find(playerId) transform {
 			case Return(player) =>
 				s.playerOption = Some(player)
@@ -91,7 +96,7 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 					InfoMessage(WelcomeInfo),
 					InfoMessage(CurrentAddressInfo(s.remoteAddress.toString)),
 					SystemChatMessage(motd)
-					)
+				)
 			case Throw(_) => s ! PlayerSelectionErrorMessage
 		}
 	}

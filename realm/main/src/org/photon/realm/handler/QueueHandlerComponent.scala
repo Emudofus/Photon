@@ -7,9 +7,7 @@ import com.twitter.util.Future
 trait QueueHandlerComponent extends BaseHandlerComponent {
 	import HandlerComponent._
 
-	override def networkHandler = super.networkHandler orElse queueHandler
-
-	def queueHandler: NetworkHandler = {
+	handle() {
 		case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
 	}
 }
