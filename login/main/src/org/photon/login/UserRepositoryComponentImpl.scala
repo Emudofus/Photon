@@ -14,12 +14,13 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
 	class UserRepositoryImpl extends BaseRepository[User](self.database) with UserRepository {
 		lazy val table = "users"
 		lazy val pkColumns = Seq("id")
-		lazy val columns = Seq("name", "password", "nickname", "secret_question", "secret_answer", "community_id", "subscription_end")
+		lazy val columns = Seq("name", "password", "salt", "nickname", "secret_question", "secret_answer", "community_id", "subscription_end")
 
 		def buildModel(rs: ResultSet) = User(
 			rs.getLong("id"),
 			rs.getString("name"),
 			rs.getString("password"),
+			rs.getString("salt"),
 			rs.getString("nickname"),
 			rs.getString("secret_question"),
 			rs.getString("secret_answer"),
@@ -30,6 +31,7 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
 		def bindParams(ps: PreparedStatement, user: User)(implicit index: Incremented[Int]) {
 			ps.set(user.name)
 			ps.set(user.password)
+			ps.set(user.salt)
 			ps.set(user.nickname)
 			ps.set(user.secretQuestion)
 			ps.set(user.secretAnswer)

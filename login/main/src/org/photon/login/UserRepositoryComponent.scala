@@ -5,15 +5,16 @@ import org.photon.common.persist.{Repository, Model, ModelState}
 import org.photon.common.persist.ModelState.ModelState
 
 case class User(
-   id: Long,
-   name: String,
-   password: String,
-   nickname: String,
-   secretQuestion: String,
-   secretAnswer: String,
-   communityId: Int,
-   subscriptionEnd: Time,
-   state: ModelState = ModelState.None
+	id: Long,
+	name: String,
+	password: String,
+	salt: String,
+	nickname: String,
+	secretQuestion: String,
+	secretAnswer: String,
+	communityId: Int,
+	subscriptionEnd: Time,
+	state: ModelState = ModelState.None
 ) extends Model {
 	type PrimaryKey = Long
 }

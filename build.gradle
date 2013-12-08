@@ -13,6 +13,8 @@ subprojects {
 	    compile "org.scala-lang:scala-library:${scalaStdlibVersion}"
         compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
         compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
+
+        testCompile "org.scalatest:scalatest_${scalaVersion}:${scalatestVersion}"
     }
 
     buildscript {
@@ -36,6 +38,14 @@ subprojects {
 
     compileScala {
         scalaCompileOptions.useAnt = false // use Zinc instead of Ant
+        scalaCompileOptions.additionalParameters = ['-feature']
+    }
+
+    test << { // scalatest support
+        ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
+        ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+            reporter(type: 'stderr')
+        }
     }
 }
 

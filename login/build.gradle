@@ -21,3 +21,9 @@ apply plugin: 'application'
 mainClassName = 'org.photon.login.LoginServer'
 
 apply plugin: 'flyway'
+
+flyway {
+    placeholders = [
+        'users_salt_length': '32'
+    ]
+}
