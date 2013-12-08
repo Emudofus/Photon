@@ -15,5 +15,10 @@ photon {
     database {
         url = "jdbc:postgresql://localhost/photon?user=postgres"
         driver = org.postgresql.Driver
+
+        users {
+            password-digest = SHA-512
+            password-encoding = UTF-8
+        }
     }
 }
