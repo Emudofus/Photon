@@ -27,8 +27,8 @@ out/
 /incoming-distributions
 .idea
 *.sublime-*
-*/src/application.conf
-*/src/application.json
-*/src/application.properties
-*/src/logback.groovy
-*/src/logback.xml
+application.conf
+application.json
+application.properties
+logback.groovy
+logback.xml
