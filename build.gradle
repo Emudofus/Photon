@@ -33,6 +33,10 @@ subprojects {
 			resources.srcDirs = ['test/res']
         }
     }
+
+    compileScala {
+        scalaCompileOptions.useAnt = false // use Zinc instead of Ant
+    }
 }
 
 task wrapper(type: Wrapper) {
