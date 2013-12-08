@@ -7,7 +7,7 @@ import com.twitter.util.Future
 trait QueueHandlerComponent extends BaseHandlerComponent {
 	import HandlerComponent._
 
-	handle() {
+	handle {
 		case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
 	}
 }

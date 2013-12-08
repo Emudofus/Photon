@@ -15,7 +15,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 
 	private val logger = Logger(LoggerFactory getLogger classOf[HandlerComponentImpl])
 
-	handle() {
+	handle {
 		case Connect(s) =>
 			s ! HelloConnectMessage(s.ticket)
 
@@ -26,7 +26,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	handle() {
+	handle {
 		case Message(s, VersionMessage(DofusProtocol.version)) =>
 			s.state = AuthenticationState
 			Future.Done
@@ -38,7 +38,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	handle() {
+	handle {
 		case Message(s, AuthenticationMessage(username, password)) =>
 			require(s.userOption.isEmpty, s"expected a non-logged client ${s.remoteAddress}")
 
@@ -67,20 +67,7 @@ trait HandlerComponentImpl extends HandlerComponent {
 	}
 
 
-	def realmServerUpdated(s: NetworkSession): Observable.UnitListener = {
-		case realm: RealmServer =>
-			s ! ServerListMessage(Seq(realm.infos))
-		case () =>
-			realmManager.playerList(s.user) flatMap {
-				case players => s ! (
-					ServerListMessage(realmManager.availableServers),
-					PlayerListMessage(s.user.subscriptionEnd, players)
-					)
-			}
-	}
-
-
-	handle(authenticated) {
+	when(authenticated) {
 		case Message(s, QueueStatusRequestMessage) => Future.Done
 
 		case Message(s, PlayerListRequestMessage) => realmManager.playerList(s.user) flatMap {
@@ -102,5 +89,18 @@ trait HandlerComponentImpl extends HandlerComponent {
 
 			case None => s !! ServerSelectionErrorMessage
 		}
+	}
+
+
+	def realmServerUpdated(s: NetworkSession): Observable.UnitListener = {
+		case realm: RealmServer =>
+			s ! ServerListMessage(Seq(realm.infos))
+		case () =>
+			realmManager.playerList(s.user) flatMap {
+				case players => s ! (
+					ServerListMessage(realmManager.availableServers),
+					PlayerListMessage(s.user.subscriptionEnd, players)
+					)
+			}
 	}
 }

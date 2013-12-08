@@ -11,7 +11,7 @@ trait AuthHandlerComponent extends BaseHandlerComponent {
 	import HandlerComponent._
 	private val logger = Logger(LoggerFactory getLogger classOf[AuthHandlerComponent])
 
-	handle(nonAuthenticated) { case Message(s, AuthRequestMessage(ticket)) =>
+	when(nonAuthenticated) { case Message(s, AuthRequestMessage(ticket)) =>
 		networkService.auth(ticket) transform {
 			case Return(user) =>
 				s.userOption = Some(user)

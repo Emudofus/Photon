@@ -15,7 +15,7 @@ trait HandlerComponentImpl extends BaseHandlerComponent
 
 	import HandlerComponent._
 
-	handle() {
+	handle {
 		case Connect(s) => s ! HelloGameMessage
 		case Disconnect(s) => Future.Done
 	}

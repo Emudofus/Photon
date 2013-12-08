@@ -9,14 +9,14 @@ import org.photon.protocol.dofus.infos.ScreenResolutionMessage
 trait InGameHandlerComponent extends BaseHandlerComponent {
 	import org.photon.realm.HandlerComponent._
 
-	handle(playing) {
+	when(playing) {
 		case Message(s, CurrentDateRequestMessage) =>
 			s ! CurrentDateMessage(Time.now)
 
 		case Message(s, ScreenResolutionMessage(width, height, tpe)) => Future.Done // useless
 	}
 
-	handle(playing) {
+	when(playing) {
 		case Message(s, GameContextCreationMessage(context)) if context == Context.Solo =>
 			s transaction (
 				GameContextCreationSuccessMessage(context),

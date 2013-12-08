@@ -67,7 +67,7 @@ trait BaseHandlerComponent extends HandlerComponent {
 		rec(PartialFunction.empty, networkHandlerBuilder.result())
 	}
 
-	def handle(filter: NetworkFilter = emptyFilter)(handler: NetworkHandler) {
+	def when(filter: NetworkFilter)(handler: NetworkHandler) {
 		networkHandlerBuilder += (filter match {
 			case `emptyFilter` => handler
 			case _ => {
@@ -75,5 +75,9 @@ trait BaseHandlerComponent extends HandlerComponent {
 					filter(req) flatMap { r => handler(r) }
 			}
 		})
+	}
+
+	def handle(handler: NetworkHandler) {
+		when(emptyFilter)(handler)
 	}
 }

@@ -46,12 +46,16 @@ trait HandlerComponent {
 		rec(PartialFunction.empty, networkHandlerBuilder.result())
 	}
 
-	def handle(filter: NetworkFilter = emptyFilter)(handler: NetworkHandler) {
+	def when(filter: NetworkFilter)(handler: NetworkHandler) {
 		networkHandlerBuilder += (filter match {
 			case `emptyFilter` => handler
 			case _ => {
 				case req if handler.isDefinedAt(req) => filter(req) flatMap { _ => handler(req) }
 			}
 		})
+	}
+
+	def handle(handler: NetworkHandler) {
+		when(emptyFilter)(handler)
 	}
 }

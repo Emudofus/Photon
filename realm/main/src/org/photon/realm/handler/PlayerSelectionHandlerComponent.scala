@@ -18,7 +18,7 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 	private val secretAnswerSinceLevel = config.getInt("photon.realm.secret-answer-since-level")
 	private val motd = config.getString("photon.realm.motd")
 
-	handle(authenticated && notPlaying) {
+	when(authenticated && notPlaying) {
 		case Message(s, GiftListRequestMessage(locale)) => Future.Done // TODO gifts
 
 		case Message(s, IdentityMessage(identity)) => Future.Done // useless
@@ -27,7 +27,7 @@ trait PlayerSelectionHandlerComponent extends BaseHandlerComponent {
 			s ! RegionalVersionMessage(communityId)
 	}
 
-	handle(authenticated && notPlaying) {
+	when(authenticated && notPlaying) {
 
 		// READ
 		case Message(s, PlayerListRequestMessage) => playerRepository.findByOwner(s.user.id) flatMap { players =>
