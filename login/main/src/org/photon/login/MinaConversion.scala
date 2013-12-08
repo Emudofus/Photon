@@ -5,6 +5,8 @@ import com.twitter.util.{Future, Promise}
 import org.apache.mina.core.session.IoSession
 
 object MinaConversion {
+	import scala.language.implicitConversions
+
 	implicit def fn2IoFutureListener[T <: IoFuture, R](fn: T => R) = new IoFutureListener[T] {
 		def operationComplete(future: T) {
 			fn(future)
