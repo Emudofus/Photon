@@ -20,7 +20,7 @@ trait UserRepositoryComponentImpl extends UserRepositoryComponent { self: Databa
 			rs.getLong("id"),
 			rs.getString("name"),
 			rs.getString("password"),
-			rs.getString("salt"),
+			rs.getString("salt").trim,
 			rs.getString("nickname"),
 			rs.getString("secret_question"),
 			rs.getString("secret_answer"),
