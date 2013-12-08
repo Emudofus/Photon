@@ -5,26 +5,26 @@ import org.photon.common.persist.{Repository, Model, ModelState}
 import org.photon.common.persist.ModelState.ModelState
 
 case class User(
-  id: Long,
-  name: String,
-  password: String,
-  nickname: String,
-  secretQuestion: String,
-  secretAnswer: String,
-  communityId: Int,
-  subscriptionEnd: Time,
-  state: ModelState = ModelState.None
+   id: Long,
+   name: String,
+   password: String,
+   nickname: String,
+   secretQuestion: String,
+   secretAnswer: String,
+   communityId: Int,
+   subscriptionEnd: Time,
+   state: ModelState = ModelState.None
 ) extends Model {
-  type PrimaryKey = Long
+	type PrimaryKey = Long
 }
 
 trait UserRepository extends Repository[User] {
-  def find(name: String): Future[User]
+	def find(name: String): Future[User]
 }
 
 trait UserRepositoryComponent {
-  sealed abstract class RepositoryException extends RuntimeException
-  case class UnknownUserException() extends RepositoryException
+	sealed abstract class RepositoryException extends RuntimeException
+	case class UnknownUserException() extends RepositoryException
 
-  implicit val users: UserRepository
+	implicit val users: UserRepository
 }

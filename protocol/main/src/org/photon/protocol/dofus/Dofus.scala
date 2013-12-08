@@ -4,87 +4,87 @@ import org.photon.protocol.{MessageDefinition, Message, Deserializer, Serializab
 import scala.annotation.tailrec
 
 trait StringSerializable extends Serializable {
-  type Out = StringBuilder
+	type Out = StringBuilder
 }
 
 trait StringDeserializer extends Deserializer {
-  type In = String
+	type In = String
 }
 
 trait DofusMessage extends Message with StringSerializable {
-  override def definition: DofusDeserializer
+	override def definition: DofusDeserializer
 }
 
 trait DofusDeserializer extends MessageDefinition with StringDeserializer {
-  type Opcode = String
+	type Opcode = String
 
-  override def deserialize(in: In): Option[DofusMessage]
+	override def deserialize(in: In): Option[DofusMessage]
 }
 
 trait DofusStaticMessage extends DofusMessage with DofusDeserializer {
-  val data: Any
+	val data: Any
 
-  override def definition = this
-  def serialize(out: Out) = out ++= data.toString
-  def deserialize(in: In) = if (in == data) Some(this) else None
+	override def definition = this
+	def serialize(out: Out) = out ++= data.toString
+	def deserialize(in: In) = if (in == data) Some(this) else None
 }
 
 object DofusProtocol {
-  val version = "1.29.1"
+	val version = "1.29.1"
 
-  def deserialize(o: String): Option[DofusMessage] = o.splitAt(2) match {
-    case (opcode, data) => deserializers.get(opcode).flatMap(_.deserialize(data))
-  }
+	def deserialize(o: String): Option[DofusMessage] = o.splitAt(2) match {
+		case (opcode, data) => deserializers.get(opcode).flatMap(_.deserialize(data))
+	}
 
-  def serialize(messages: List[DofusMessage]): String = {
+	def serialize(messages: List[DofusMessage]): String = {
 
-    @tailrec
-    def rec(o: List[DofusMessage])(implicit builder: StringBuilder): String = o match {
-      case head :: tail =>
-        builder ++= head.definition.opcode
-        head.serialize(builder)
-        builder += '\0'
+		@tailrec
+		def rec(o: List[DofusMessage])(implicit builder: StringBuilder): String = o match {
+			case head :: tail =>
+				builder ++= head.definition.opcode
+				head.serialize(builder)
+				builder += '\0'
 
-        rec(tail)
+				rec(tail)
 
-      case Nil =>
-        builder.result()
-    }
+			case Nil =>
+				builder.result()
+		}
 
-    rec(messages)(StringBuilder.newBuilder)
-  }
+		rec(messages)(StringBuilder.newBuilder)
+	}
 
-  val deserializers: Map[String, DofusDeserializer] = Map(
-    login.QueueStatusRequestMessage.opcode -> login.QueueStatusRequestMessage,
-    login.PlayerListRequestMessage.opcode -> login.PlayerListRequestMessage,
-    login.ServerSelectionRequestMessage.opcode -> login.ServerSelectionRequestMessage,
+	val deserializers: Map[String, DofusDeserializer] = Map(
+		login.QueueStatusRequestMessage.opcode -> login.QueueStatusRequestMessage,
+		login.PlayerListRequestMessage.opcode -> login.PlayerListRequestMessage,
+		login.ServerSelectionRequestMessage.opcode -> login.ServerSelectionRequestMessage,
 
-    account.AuthRequestMessage.opcode -> account.AuthRequestMessage,
-    account.RegionalVersionRequestMessage.opcode -> account.RegionalVersionRequestMessage,
-    account.GiftListRequestMessage.opcode -> account.GiftListRequestMessage,
-    account.IdentityMessage.opcode -> account.IdentityMessage,
-    account.PlayerListRequestMessage.opcode -> account.PlayerListRequestMessage,
-    account.RandomPlayerNameRequestMessage.opcode -> account.RandomPlayerNameRequestMessage,
-    account.RandomPlayerNameMessage.opcode -> account.RandomPlayerNameMessage,
-    account.PlayerCreationRequestMessage.opcode -> account.PlayerCreationRequestMessage,
-    account.PlayerSelectionRequestMessage.opcode -> account.PlayerSelectionRequestMessage,
-    account.PlayerDeletionRequestMessage.opcode -> account.PlayerDeletionRequestMessage,
+		account.AuthRequestMessage.opcode -> account.AuthRequestMessage,
+		account.RegionalVersionRequestMessage.opcode -> account.RegionalVersionRequestMessage,
+		account.GiftListRequestMessage.opcode -> account.GiftListRequestMessage,
+		account.IdentityMessage.opcode -> account.IdentityMessage,
+		account.PlayerListRequestMessage.opcode -> account.PlayerListRequestMessage,
+		account.RandomPlayerNameRequestMessage.opcode -> account.RandomPlayerNameRequestMessage,
+		account.RandomPlayerNameMessage.opcode -> account.RandomPlayerNameMessage,
+		account.PlayerCreationRequestMessage.opcode -> account.PlayerCreationRequestMessage,
+		account.PlayerSelectionRequestMessage.opcode -> account.PlayerSelectionRequestMessage,
+		account.PlayerDeletionRequestMessage.opcode -> account.PlayerDeletionRequestMessage,
 
-    basics.CurrentDateRequestMessage.opcode -> basics.CurrentDateRequestMessage,
+		basics.CurrentDateRequestMessage.opcode -> basics.CurrentDateRequestMessage,
 
-    chat.UpdateChannelListMessage.opcode -> chat.UpdateChannelListMessage,
+		chat.UpdateChannelListMessage.opcode -> chat.UpdateChannelListMessage,
 
-    emotes.EmoteListMessage.opcode -> emotes.EmoteListMessage,
+		emotes.EmoteListMessage.opcode -> emotes.EmoteListMessage,
 
-    friends.ToggleConnectionListenerMessage.opcode -> friends.ToggleConnectionListenerMessage,
+		friends.ToggleConnectionListenerMessage.opcode -> friends.ToggleConnectionListenerMessage,
 
-    game.GameContextCreationMessage.opcode -> game.GameContextCreationMessage,
-    game.GameContextDescriptionMessage.opcode -> game.GameContextDescriptionMessage,
+		game.GameContextCreationMessage.opcode -> game.GameContextCreationMessage,
+		game.GameContextDescriptionMessage.opcode -> game.GameContextDescriptionMessage,
 
-    infos.ScreenResolutionMessage.opcode -> infos.ScreenResolutionMessage,
+		infos.ScreenResolutionMessage.opcode -> infos.ScreenResolutionMessage,
 
-    items.UpdateWeightMessage.opcode -> items.UpdateWeightMessage,
+		items.UpdateWeightMessage.opcode -> items.UpdateWeightMessage,
 
-    spells.SpellListMessage.opcode -> spells.SpellListMessage
-  )
+		spells.SpellListMessage.opcode -> spells.SpellListMessage
+	)
 }

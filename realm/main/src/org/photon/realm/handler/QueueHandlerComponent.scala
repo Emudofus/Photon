@@ -5,11 +5,11 @@ import org.photon.protocol.dofus.login.QueueStatusRequestMessage
 import com.twitter.util.Future
 
 trait QueueHandlerComponent extends BaseHandlerComponent {
-  import HandlerComponent._
+	import HandlerComponent._
 
-  override def networkHandler = super.networkHandler orElse queueHandler
+	override def networkHandler = super.networkHandler orElse queueHandler
 
-  def queueHandler: NetworkHandler = {
-    case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
-  }
+	def queueHandler: NetworkHandler = {
+		case Message(s, QueueStatusRequestMessage) => Future.Done // TODO queue
+	}
 }

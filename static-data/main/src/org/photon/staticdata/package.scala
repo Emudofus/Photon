@@ -1,5 +1,5 @@
 package org.photon
 
 package object staticdata {
-  type MovementType = MovementType.Value
+	type MovementType = MovementType.Value
 }

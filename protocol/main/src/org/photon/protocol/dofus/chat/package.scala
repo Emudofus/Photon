@@ -1,5 +1,5 @@
 package org.photon.protocol.dofus
 
 package object chat {
-  type Channel = Char
+	type Channel = Char
 }
