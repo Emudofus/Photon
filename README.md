@@ -31,7 +31,9 @@ A Scala Dofus 1.29 emulator
   cp -rf realm/build/install/realm/ prod/
   ```
   
-4. Finally, go to `prod/` and run
+4. You may also want to create schemas and tables on your SQL server. You can find all SQL scripts inside `login/main/res/db/migration` for login tables and inside `realm/main/res/db/migration` for realm tables.
+  
+5. Finally, go to `prod/` and run
 
   ```sh
   bin/login
@@ -43,10 +45,21 @@ A Scala Dofus 1.29 emulator
   bin/realm
   ```
 
-5. *todo* instructions with configuration files
+6. *todo* instructions with configuration files
 
 #### For contributors
 
-First copy `application.conf.dist` and `logback.groovy.dist` to `application.conf` and `logback.conf`
-from both login and realm login projects, edit them as you have to and then run `gradle login:run` or
-`gradle realm:run`.
+1. copy `application.conf.dist` and `logback.groovy.dist` to `application.conf` and `logback.conf`
+from both login and realm login projects
+
+2. edit them as you have to
+
+3. apply database migrations with
+
+  for login server
+  `gradle login:flywayMigrate -Dflyway.url='insert_database_url_here'`
+
+  for realm server
+  `gradle realm:flywayMigrate -Dflyway.url='insert_database_url_here'`
+
+4. run `gradle login:run` or `gradle realm:run`.
