@@ -12,22 +12,12 @@ trait UserAuthenticationComponentImpl extends UserAuthenticationComponent {
 	import Strings.{decryptDofusPassword => decrypt}
 	import UserAuthenticationComponentImpl.encrypt
 
-	val thisConfig = config.getConfig("photon.database.users")
+	private[this] val thisConfig = config.getConfig("photon.database.users")
 	implicit val digest = MessageDigest.getInstance(thisConfig.getString("password-digest"))
 	implicit val charset = Charset.forName(thisConfig.getString("password-encoding"))
 
-	def validPassword(user: User, password: String, key: String) = {
-		val expected = user.password
-		println(expected)
-
-		var tested = decrypt(password, key)
-		println(UserAuthenticationComponentImpl.tohex(tested.getBytes(charset)))
-		println(UserAuthenticationComponentImpl.tohex(user.salt.getBytes(charset)))
-		tested = encrypt(tested, user.salt)
-		println(tested)
-
-		expected == tested
-	}
+	def validPassword(user: User, password: String, key: String) =
+		user.password == encrypt(decrypt(password, key), user.salt)
 
 	def authenticate(s: NetworkSession, username: String, password: String) = users.find(username).transform {
 		case Return(user) =>
@@ -51,9 +41,8 @@ object UserAuthenticationComponentImpl {
 	import java.security.MessageDigest
 	import java.nio.charset.Charset
 
-	def tohex[Bytes <% Seq[Byte]](bytes: Bytes): String = {
+	def tohex[Bytes <% Seq[Byte]](bytes: Bytes): String =
 		bytes map { it => (0xFF & it).formatted("%02x") } mkString
-	}
 
 	def hash(in: String)(implicit digest: MessageDigest, charset: Charset): String = tohex(digest.digest(in.getBytes(charset)))
 
