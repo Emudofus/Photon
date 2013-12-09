@@ -27,9 +27,16 @@ object GameContextCreationSuccessMessage extends DofusDeserializer {
 	def deserialize(in: In) = None
 }
 
-case class MapDataMessage(id: Int, date: String, key: String) extends DofusMessage {
+case class MapDataMessage(id: Int, date: Array[Byte], key: Array[Byte]) extends DofusMessage {
 	def definition = MapDataMessage
-	def serialize(out: Out) = out append '|' append (id) append '|' append (date) append '|' append (key)
+	def serialize(out: Out) {
+		out += '|'
+		out append id
+		out += '|'
+		out append date
+		out += '|'
+		out append key
+	}
 }
 
 object MapDataMessage extends DofusDeserializer {

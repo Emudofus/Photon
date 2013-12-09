@@ -13,6 +13,20 @@ package object dofus {
 		}
 	}
 
+	implicit class StringBuilderExt(val self: StringBuilder) extends AnyVal {
+		def append(bytes: Array[Byte], start: Int = 0, end: Int = -1): self.type = {
+			var i = 0
+			val max = if (end < 0) bytes.length else end
+
+			while (i <= max) {
+				self.append(bytes(i).toChar)
+				i += 1
+			}
+
+			self
+		}
+	}
+
 	def hex(c: Int) = if (c < 0) "-1" else Integer.toString(c, 16)
 	def btoi(b: Boolean) = if (b) "1" else "0"
 	def itob(i: String) = i == "1"
