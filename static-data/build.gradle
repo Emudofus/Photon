@@ -2,4 +2,5 @@
 dependencies {
 	compile "org.photon.jackson:flatjson:${flatjsonVersion}"
 	compile "com.fasterxml.jackson.module:jackson-module-scala_${scalaVersion}:${jacksonVersion}"
+    compile "com.fasterxml.jackson.module:jackson-module-mrbean:${jacksonVersion}"
 }
