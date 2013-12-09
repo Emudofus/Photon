@@ -22,3 +22,9 @@ apply plugin: 'application'
 mainClassName = 'org.photon.realm.RealmServer'
 
 apply plugin: 'flyway'
+flyway {
+    placeholders = [
+        'start_map_id': '7411',
+        'start_cell_id': '355'
+    ]
+}

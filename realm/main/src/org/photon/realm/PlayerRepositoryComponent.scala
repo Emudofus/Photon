@@ -4,23 +4,27 @@ import com.twitter.util.Future
 import org.photon.common.persist.{Cachable, Repository, Model, ModelState}
 import org.photon.common.persist.ModelState.ModelState
 import org.photon.protocol.dofus.account.{Player => PlayerTemplate}
+import org.photon.staticdata.{MapCell, MapData}
 
 case class Colors(first: Int, second: Int, third: Int)
 
 class PlayerAppearence(val skin: Short, val colors: Colors) {
-	def accessories: Seq[Int] = Seq.fill(5)(0)
+	def accessories: Stream[Int] = Stream.fill(5)(0)
 }
 
+class PlayerLocation(var map: MapData, var cell: MapCell)
+
 case class Player(
-	 id: Long,
-	 ownerId: Long,
-	 name: String,
-	 breed: Short,
-	 gender: Boolean,
-	 level: Short,
-	 appearence: PlayerAppearence,
-	 state: ModelState = ModelState.None
- ) extends Model {
+	id: Long,
+	ownerId: Long,
+	name: String,
+	breed: Short,
+	gender: Boolean,
+	level: Short,
+	appearence: PlayerAppearence,
+	location: PlayerLocation,
+	state: ModelState = ModelState.None
+) extends Model {
 	type PrimaryKey = Long
 
 	def toPlayerTemplate = PlayerTemplate(

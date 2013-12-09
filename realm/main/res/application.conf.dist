@@ -30,6 +30,8 @@ photon {
         secret-answer-since-level = 20
         max-players-per-user = 5
         motd = "Welcome to Photon `master' version"
+        start-map = 7411
+        start-cell = 355
     }
 
     static-data {
