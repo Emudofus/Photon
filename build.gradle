@@ -25,7 +25,7 @@ subprojects {
 
     sourceSets {
         main {
-            java.srcDirs = ['main/src']
+            java.srcDirs = ['main/java'] // enable Zinc joint compilation
             scala.srcDirs = ['main/src']
             resources.srcDirs = ['main/res']
         }
