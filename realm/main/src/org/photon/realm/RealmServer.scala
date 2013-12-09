@@ -9,6 +9,7 @@ trait RealmServerComponent extends AnyRef
 	with ServiceManagerComponent
 	with DatabaseComponentImpl
 	with ExecutorComponentImpl
+	with DataRepositoryComponentImpl
 	with PlayerRepositoryComponentImpl
 	with LoginManagerComponentImpl
 	with HandlerComponentImpl

@@ -6,8 +6,9 @@ dependencies {
     compile "org.photon.common:photon-persist:${photonPersistVersion}"
     runtime jdbcConnector
 
-    compile project(":common")
-    compile project(":protocol")
+    compile project(':common')
+    compile project(':protocol')
+    compile project(':static-data')
 }
 
 buildscript {

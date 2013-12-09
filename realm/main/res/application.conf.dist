@@ -31,4 +31,9 @@ photon {
         max-players-per-user = 5
         motd = "Welcome to Photon `master' version"
     }
+
+    static-data {
+        base-path = "."
+        maps = "/"
+    }
 }
