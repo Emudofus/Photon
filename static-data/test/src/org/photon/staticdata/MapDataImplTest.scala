@@ -75,7 +75,29 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 		}
 	}
 
-	"A MapData that owns MapCell" - {
+	"A MapTrigger" - {
+		"should be serializable" in new Fixture {
+			val trigger = MapTrigger.newBuilder
+				.withOrigin(MapData.newBuilder.withId(42))
+				.withOriginCell(MapCell.newBuilder.withId(24))
+				.withTarget(MapData.newBuilder.withId(84))
+				.withTargetCell(MapCell.newBuilder.withId(48))
+				.result
+
+			mapper.writeValueAsString(trigger) should === ("{\"origin\":42,\"originCell\":24,\"target\":84,\"targetCell\":48}")
+		}
+
+		"should be deserializable" in new Fixture {
+			val trigger: MapTrigger = mapper.readValue[MapDataImpl.Trigger]("{\"origin\":42,\"originCell\":24,\"target\":84,\"targetCell\":48}")
+
+			trigger.origin.id should === (42)
+			trigger.originCell.id should === (24)
+			trigger.target.id should === (84)
+			trigger.targetCell.id should == (48)
+		}
+	}
+
+	"A MapData that owns MapCell that owns MapTrigger" - {
 		"should be serializable" in new Fixture {
 			val mapBuild = MapData.newBuilder
 				.withId(1)
@@ -86,17 +108,20 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 				.withDate("such date".getBytes)
 				.withPremium(premium = true)
 
-			val cell = MapCell.newBuilder
+			val cellBuild = MapCell.newBuilder
 				.withId(42)
 				.withMap(mapBuild.lazyResult)
 				.withLos(true)
 				.withGroundLevel(42).withGroundSlope(24)
 				.withMovementType(MovementType.Walkable)
 				.withInteractiveObject(Some(84))
-				.result
 
 			val map = mapBuild
-				.withCells(Seq(cell))
+				.withCells(Seq(cellBuild.withTrigger(MapTrigger.newBuilder
+					.withOrigin(mapBuild)
+					.withOriginCell(cellBuild)
+					.withTarget(mapBuild)
+					.withTargetCell(cellBuild)).result))
 				.result
 
 			mapper.writeValueAsString(map) should === ("{\"id\":1,\"width\":42,\"height\":24,\"cells\":[{\"id\":42,\"los\":true,\"groundLevel\":42,\"groundSlope\":24,\"movementType\":3,\"interactiveObject\":84}],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true,\"pos\":[42,24],\"subareaId\":null}")

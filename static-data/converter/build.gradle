@@ -1,4 +1,6 @@
 
 dependencies {
+    compile "org.photon.common:photon-persist:${photonPersistVersion}"
+
 	compile project(':static-data')
 }

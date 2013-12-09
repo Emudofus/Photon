@@ -1,13 +1,16 @@
 package org.photon.staticdata;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.photon.jackson.flatjson.OneToMany;
 import scala.Option;
 import scala.collection.JavaConversions$;
 import scala.collection.Seq;
@@ -16,6 +19,7 @@ import scala.collection.convert.WrapAsJava$;
 import java.io.IOException;
 import java.util.List;
 
+@JsonIdentityInfo(property = "id", generator = ObjectIdGenerators.PropertyGenerator.class, scope = MapDataImpl.class)
 public class MapDataImpl implements MapData, MapData.Builder {
 
     private int id;
@@ -33,6 +37,105 @@ public class MapDataImpl implements MapData, MapData.Builder {
     private byte[] date;
     private boolean premium;
 
+    @JsonIdentityInfo(property = "id", generator = ObjectIdGenerators.PropertyGenerator.class, scope = Trigger.class)
+    public static class Trigger implements MapTrigger, MapTrigger.Builder {
+        @OneToMany
+        private MapDataImpl origin;
+        @OneToMany
+        private Cell originCell;
+        @OneToMany
+        private MapDataImpl target;
+        @OneToMany
+        private Cell targetCell;
+
+        @Override
+        public Builder withOrigin(MapData.Builder origin) {
+            setOrigin((MapDataImpl) origin);
+            return this;
+        }
+
+        @Override
+        public Builder result() {
+            return this;
+        }
+
+        @Override
+        public Builder withOriginCell(MapCell.Builder originCell) {
+            setOriginCell((Cell) originCell);
+            return this;
+        }
+
+        @Override
+        public Builder withTargetCell(MapCell.Builder targetCell) {
+            setTargetCell((Cell) targetCell);
+            return this;
+        }
+
+        @Override
+        public Builder lazyResult() {
+            return this;
+        }
+
+        @Override
+        public Builder withTarget(MapData.Builder target) {
+            setTarget((MapDataImpl) target);
+            return this;
+        }
+
+        @Override
+        public MapDataImpl target() {
+            return getTarget();
+        }
+
+        @Override
+        public Cell targetCell() {
+            return getTargetCell();
+        }
+
+        @Override
+        public Cell originCell() {
+            return getOriginCell();
+        }
+
+        @Override
+        public MapDataImpl origin() {
+            return getOrigin();
+        }
+
+        public MapDataImpl getOrigin() {
+            return origin;
+        }
+
+        public void setOrigin(MapDataImpl origin) {
+            this.origin = origin;
+        }
+
+        public Cell getOriginCell() {
+            return originCell;
+        }
+
+        public void setOriginCell(Cell originCell) {
+            this.originCell = originCell;
+        }
+
+        public MapDataImpl getTarget() {
+            return target;
+        }
+
+        public void setTarget(MapDataImpl target) {
+            this.target = target;
+        }
+
+        public Cell getTargetCell() {
+            return targetCell;
+        }
+
+        public void setTargetCell(Cell targetCell) {
+            this.targetCell = targetCell;
+        }
+    }
+
+    @JsonIdentityInfo(property = "id", generator = ObjectIdGenerators.PropertyGenerator.class, scope = Cell.class)
     public static class Cell implements MapCell, MapCell.Builder {
 
         private short id;
@@ -47,6 +150,7 @@ public class MapDataImpl implements MapData, MapData.Builder {
         @JsonSerialize(contentAs = Integer.class)
         @JsonDeserialize(contentAs = Integer.class)
         private Option<Object> interactiveObject;
+        private Option<Trigger> trigger;
 
         @Override
         public short id() {
@@ -81,6 +185,12 @@ public class MapDataImpl implements MapData, MapData.Builder {
         @Override
         public Option<Object> interactiveObject() {
             return getInteractiveObject();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Option trigger() {
+            return trigger;
         }
 
         @Override
@@ -122,6 +232,13 @@ public class MapDataImpl implements MapData, MapData.Builder {
         @Override
         public Builder withInteractiveObject(Option<Object> interactiveObject) {
             setInteractiveObject(interactiveObject);
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Builder withTrigger(Option<MapTrigger.Builder> trigger) {
+            setTrigger((Option) trigger);
             return this;
         }
 
@@ -190,6 +307,14 @@ public class MapDataImpl implements MapData, MapData.Builder {
         public void setInteractiveObject(Option<Object> interactiveObject) {
             this.interactiveObject = interactiveObject;
         }
+
+        public Option<Trigger> getTrigger() {
+            return trigger;
+        }
+
+        public void setTrigger(Option<Trigger> trigger) {
+            this.trigger = trigger;
+        }
     }
 
     @Override
@@ -219,7 +344,7 @@ public class MapDataImpl implements MapData, MapData.Builder {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Seq<MapCell> cells() {
+    public Seq cells() {
         return JavaConversions$.MODULE$.asScalaBuffer((List) getCells());
     }
 
@@ -286,7 +411,7 @@ public class MapDataImpl implements MapData, MapData.Builder {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Builder withCells(Seq<MapCell> cells) {
+    public Builder withCells(Seq<MapCell.Builder> cells) {
         setCells(WrapAsJava$.MODULE$.<Cell>seqAsJavaList((Seq) cells));
         return this;
     }
