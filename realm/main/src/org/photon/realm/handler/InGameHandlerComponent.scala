@@ -21,7 +21,7 @@ trait InGameHandlerComponent extends BaseHandlerComponent {
 			s transaction (
 				GameContextCreationSuccessMessage(context),
 				// TODO player's characteristics
-				MapDataMessage(id = 1, date = "", key = "") // TODO maps
+				MapDataMessage(s.player.location.map.id, s.player.location.map.date, s.player.location.map.key)
 			)
 
 		case Message(s, GameContextDescriptionMessage) => Future.Done
