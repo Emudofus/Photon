@@ -9,7 +9,7 @@ import scala.collection.mutable
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.photon.staticdata.MapData
+import org.photon.staticdata.{MapDataImpl, MapData}
 import java.io.File
 
 trait DataRepositoryComponentImpl extends DataRepositoryComponent {
@@ -28,6 +28,7 @@ trait DataRepositoryComponentImpl extends DataRepositoryComponent {
 		def boot() = Async {
 			implicit val mapper = new ObjectMapper with ScalaObjectMapper
 			mapper registerModule DefaultScalaModule
+			mapper.getSubtypeResolver.registerSubtypes(classOf[MapDataImpl])
 
 			register[MapData](mapsPath) { _.id }
 		}
