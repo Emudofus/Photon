@@ -14,7 +14,8 @@ package object converter {
 			var index = 0
 			val builder = cbf()
 			self.foreach { elem =>
-				builder += elem
+				val t = (index, elem)
+				builder += t
 				index += 1
 			}
 			builder.result()

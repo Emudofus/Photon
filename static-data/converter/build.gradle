@@ -1,6 +1,8 @@
 
 dependencies {
     compile "org.photon.common:photon-persist:${photonPersistVersion}"
+    compile "com.github.scopt:scopt_${scalaVersion}:${scoptVersion}"
+    runtime jdbcConnector
 
 	compile project(':static-data')
 }

@@ -28,11 +28,11 @@ class MapDataLoader(connection: Connection)(implicit e: Executor) extends Loader
 						val hashCodes = data.map(MapDataLoader.alphabet.indexOf(_))
 
 						MapCell.newBuilder
-							.withId(i + 1)
-							.withLos(hashCodes(0) & 1 == 1)
-							.withGroundLevel(hashCodes(1) & 15)
-							.withMovementType(MovementType.of(hashCodes(2) & 56 >> 3))
-							.withGroundSlope(hasshCodes(4) & 60 >> 2)
+							.withId((i + 1).toShort)
+							.withLos((hashCodes(0) & 1) == 1)
+							.withGroundLevel((hashCodes(1) & 15).toShort)
+							.withMovementType(MovementType.of((hashCodes(2) & 56) >> 3))
+							.withGroundSlope(((hashCodes(4) & 60) >> 2).toShort)
 					})
 
 				(build.id, build)

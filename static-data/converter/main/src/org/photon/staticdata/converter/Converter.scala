@@ -6,29 +6,66 @@ import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.photon.jackson.flatjson.FlatJsonModule
-import com.twitter.util.NonFatal
 
 object Converter {
-	implicit val e: Executor = Executors.newCachedThreadPool()
+	sealed trait Action
 
-	val baseFolder = new File(sys.props.getOrElse("conv.base", "."))
-	val mapsFile = new File(baseFolder, sys.props.getOrElse("conv.maps", "maps.json"))
+	case class Config(
+		driver: String = null,
+		url: String = null,
+		action: Action = null
+ 	)
 
-	Class.forName(sys.props("conv.driver"))
-	val connection = java.sql.DriverManager.getConnection(sys.props("conv.url"))
+	val parser = new scopt.OptionParser[Config]("converter") {
+		help("help")
 
-	val mapper = new ObjectMapper
-	mapper.registerModule(DefaultScalaModule)
-	mapper.registerModule(new FlatJsonModule)
+		opt[String]('d', "driver")
+			.required()
+			.text("the JDBC driver used for database connection")
+			.action { case (driver, config) => config.copy(driver = driver) }
+
+		opt[String]("url")
+			.required()
+			.text("the URL used for database connection")
+			.action { case (url, config) => config.copy(url = url) }
+
+		cmd("maps")
+			.text("this command will produce map data JSON")
+			.children(
+				opt[File]('o', "out")
+					.required()
+					.text("the file where map data JSON will be written")
+					.action { case (out, config) =>
+						config.copy(action = config.action.asInstanceOf[CreateMapsAction]
+							.copy(out = out))
+					}
+			)
+			.action { case (_, config) => config.copy(action = CreateMapsAction()) }
+	}
+
+	case class CreateMapsAction(out: File = null) extends Action
+
 
 	def main(args: Array[String]) {
-		implicit val mapLoader = new MapDataLoader(connection)
+		implicit val e: Executor = Executors.newCachedThreadPool()
 
-		mapLoader.load() onSuccess { maps =>
-			mapper.writeValue(mapsFile, maps.map(it => (it.id, it)).toMap)
-		} onFailure {
-			case NonFatal(ex) =>
-				ex.printStackTrace()
+		val config = parser.parse(args.toSeq, Config()).getOrElse(sys.exit(1))
+
+		Class.forName(config.driver)
+		val connection = java.sql.DriverManager.getConnection(config.url)
+
+		val mapper = new ObjectMapper
+		mapper.registerModule(DefaultScalaModule)
+		mapper.registerModule(new FlatJsonModule)
+
+		config.action match {
+			case CreateMapsAction(out) =>
+				val loader = new MapDataLoader(connection)
+
+				loader.load()
+					.map { _.map(it => (it.id, it)).toMap }
+					.onSuccess(mapper.writeValue(out, _))
+					.onFailure(_.printStackTrace())
 		}
 	}
 }
