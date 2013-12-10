@@ -3,6 +3,8 @@ package org.photon.common
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 object JavaConversion {
+	import scala.language.implicitConversions
+
 	implicit def fn2runnable(fn: => Unit) = new Runnable {
 		def run = fn
 	}
