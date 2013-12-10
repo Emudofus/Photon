@@ -37,15 +37,14 @@ public class MapDataImpl implements MapData, MapData.Builder {
     private byte[] date;
     private boolean premium;
 
-    @JsonIdentityInfo(property = "id", generator = ObjectIdGenerators.PropertyGenerator.class, scope = Trigger.class)
     public static class Trigger implements MapTrigger, MapTrigger.Builder {
-        @OneToMany
+        @JsonSerialize(using = org.photon.jackson.flatjson.Serializers.OneToMany.class)
         private MapDataImpl origin;
-        @OneToMany
+        @JsonSerialize(using = org.photon.jackson.flatjson.Serializers.OneToMany.class)
         private Cell originCell;
-        @OneToMany
+        @JsonSerialize(using = org.photon.jackson.flatjson.Serializers.OneToMany.class)
         private MapDataImpl target;
-        @OneToMany
+        @JsonSerialize(using = org.photon.jackson.flatjson.Serializers.OneToMany.class)
         private Cell targetCell;
 
         @Override
@@ -190,7 +189,7 @@ public class MapDataImpl implements MapData, MapData.Builder {
         @SuppressWarnings("unchecked")
         @Override
         public Option trigger() {
-            return trigger;
+            return getTrigger();
         }
 
         @Override

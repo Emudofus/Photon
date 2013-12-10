@@ -4,11 +4,13 @@ import org.scalatest.{ShouldMatchers, FreeSpec}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import org.photon.jackson.flatjson.FlatJsonModule
 
 class MapDataImplTest extends FreeSpec with ShouldMatchers {
 	trait Fixture {
 		val mapper = new ObjectMapper with ScalaObjectMapper
 		mapper.registerModule(DefaultScalaModule)
+		mapper.registerModule(new FlatJsonModule)
 	}
 
 	"A MapData" - {
@@ -26,11 +28,11 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 				.withPremium(premium = true)
 				.result
 
-			mapper.writeValueAsString(map) should === ("{\"id\":1,\"width\":42,\"height\":24,\"cells\":[],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true,\"pos\":[42,24],\"subareaId\":null}")
+			mapper.writeValueAsString(map) should === ("{\"id\":1,\"pos\":[42,24],\"width\":42,\"height\":24,\"subareaId\":null,\"cells\":[],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true}")
 		}
 
 		"should be deserializable" in new Fixture {
-			val map: MapData = mapper.readValue[MapDataImpl]("{\"id\":1,\"width\":42,\"height\":24,\"subareaId\":null,\"cells\":[],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true,\"pos\":[42,24]}")
+			val map: MapData = mapper.readValue[MapDataImpl]("{\"id\":1,\"pos\":[42,24],\"width\":42,\"height\":24,\"subareaId\":null,\"cells\":[],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true}")
 
 			map.id should === (1)
 			map.pos.x should === (42)
@@ -58,11 +60,11 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 				.withInteractiveObject(Some(84))
 				.result
 
-			mapper.writeValueAsString(cell) should === ("{\"id\":42,\"los\":true,\"groundLevel\":42,\"groundSlope\":24,\"movementType\":3,\"interactiveObject\":84}")
+			mapper.writeValueAsString(cell) should === ("{\"id\":42,\"los\":true,\"groundLevel\":42,\"movementType\":3,\"groundSlope\":24,\"interactiveObject\":84,\"trigger\":null}")
 		}
 
 		"should be deserializable" in new Fixture {
-			val cell: MapCell = mapper.readValue[MapDataImpl.Cell]("{\"id\":42,\"los\":true,\"groundLevel\":42,\"groundSlope\":24,\"movementType\":3,\"interactiveObject\":84}")
+			val cell: MapCell = mapper.readValue[MapDataImpl.Cell]("{\"id\":42,\"los\":true,\"groundLevel\":42,\"movementType\":3,\"groundSlope\":24,\"interactiveObject\":84,\"trigger\":null}")
 
 			cell.id should === (42)
 			cell.map should be (null)
@@ -72,6 +74,7 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 			cell.movementType should === (MovementType.Walkable)
 			cell.interactiveObject should not be 'empty
 			cell.interactiveObject.get should === (84)
+			cell.trigger should be ('empty)
 		}
 	}
 
@@ -88,12 +91,12 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 		}
 
 		"should be deserializable" in new Fixture {
-			val trigger: MapTrigger = mapper.readValue[MapDataImpl.Trigger]("{\"origin\":42,\"originCell\":24,\"target\":84,\"targetCell\":48}")
+			val (_, trigger) = mapper.readValue[(Seq[MapDataImpl], MapDataImpl.Trigger)]("[[{\"id\":42,\"cells\":[{\"id\":24}]},{\"id\":84,\"cells\":[{\"id\":48}]}],{\"origin\":42,\"originCell\":24,\"target\":84,\"targetCell\":48}]")
 
 			trigger.origin.id should === (42)
 			trigger.originCell.id should === (24)
 			trigger.target.id should === (84)
-			trigger.targetCell.id should == (48)
+			trigger.targetCell.id should === (48)
 		}
 	}
 
@@ -116,19 +119,21 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 				.withMovementType(MovementType.Walkable)
 				.withInteractiveObject(Some(84))
 
+			cellBuild.withTrigger(Some(MapTrigger.newBuilder
+				.withOrigin(mapBuild)
+				.withOriginCell(cellBuild)
+				.withTarget(mapBuild)
+				.withTargetCell(cellBuild)))
+
 			val map = mapBuild
-				.withCells(Seq(cellBuild.withTrigger(MapTrigger.newBuilder
-					.withOrigin(mapBuild)
-					.withOriginCell(cellBuild)
-					.withTarget(mapBuild)
-					.withTargetCell(cellBuild)).result))
+				.withCells(Seq(cellBuild))
 				.result
 
-			mapper.writeValueAsString(map) should === ("{\"id\":1,\"width\":42,\"height\":24,\"cells\":[{\"id\":42,\"los\":true,\"groundLevel\":42,\"groundSlope\":24,\"movementType\":3,\"interactiveObject\":84}],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true,\"pos\":[42,24],\"subareaId\":null}")
+			mapper.writeValueAsString(map) should === ("{\"id\":1,\"pos\":[42,24],\"width\":42,\"height\":24,\"subareaId\":null,\"cells\":[{\"id\":42,\"los\":true,\"groundLevel\":42,\"movementType\":3,\"groundSlope\":24,\"interactiveObject\":84,\"trigger\":{\"origin\":1,\"originCell\":42,\"target\":1,\"targetCell\":42}}],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true}")
 		}
 
 		"should be deserializable" in new Fixture {
-			val map: MapData = mapper.readValue[MapDataImpl]("{\"id\":1,\"width\":42,\"height\":24,\"cells\":[{\"id\":42,\"los\":true,\"groundLevel\":42,\"groundSlope\":24,\"movementType\":3,\"interactiveObject\":84}],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true,\"pos\":[42,24],\"subareaId\":null}")
+			val map: MapData = mapper.readValue[MapDataImpl]("{\"id\":1,\"pos\":[42,24],\"width\":42,\"height\":24,\"subareaId\":null,\"cells\":[{\"id\":42,\"los\":true,\"groundLevel\":42,\"movementType\":3,\"groundSlope\":24,\"interactiveObject\":84,\"trigger\":{\"origin\":1,\"originCell\":42,\"target\":1,\"targetCell\":42}}],\"key\":\"c3VjaCBrZXk=\",\"date\":\"c3VjaCBkYXRl\",\"premium\":true}")
 
 			map.id should === (1)
 			map.pos.x should === (42)
@@ -150,6 +155,12 @@ class MapDataImplTest extends FreeSpec with ShouldMatchers {
 			cell.movementType should === (MovementType.Walkable)
 			cell.interactiveObject should not be 'empty
 			cell.interactiveObject.get should === (84)
+
+			cell.trigger should not be 'empty
+			cell.trigger.get.origin should === (map)
+			cell.trigger.get.originCell should === (cell)
+			cell.trigger.get.target should === (map)
+			cell.trigger.get.targetCell should === (cell)
 		}
 	}
 }
