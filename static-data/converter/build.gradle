@@ -4,3 +4,6 @@ dependencies {
 
 	compile project(':static-data')
 }
+
+apply plugin: 'application'
+mainClassName = 'org.photon.staticdata.converter.Converter'
