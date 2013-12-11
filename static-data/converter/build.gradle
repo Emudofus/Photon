@@ -1,10 +1,12 @@
 
 dependencies {
     compile "org.photon.common:photon-persist:${photonPersistVersion}"
-    compile "com.github.scopt:scopt_${scalaVersion}:${scoptVersion}"
+	compile ("com.github.scopt:scopt_${scalaVersion}:${scoptVersion}") {
+		exclude group: 'org.specs2'
+	}
     runtime jdbcConnector
 
-	compile project(':static-data')
+	compile project(':static-data') 
 }
 
 apply plugin: 'application'

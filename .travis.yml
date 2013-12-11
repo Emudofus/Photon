@@ -1,5 +1,6 @@
 language: scala
 scala:
+  - 2.10.3
   - 2.10.2
   - 2.10.1
   - 2.10.0
@@ -12,5 +13,7 @@ branches:
     - master
 before_install:
   - chmod +x ./gradlew
+install:
+  - TERM=dumb ./gradlew assemble
 script:
-  - ./gradlew -i check
+  - TERM=dumb ./gradlew check

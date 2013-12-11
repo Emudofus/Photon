@@ -10,11 +10,13 @@ subprojects {
     }
 
     dependencies {
-	    compile "org.scala-lang:scala-library:${scalaStdlibVersion}"
-        compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
-        compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
+		compile "org.scala-lang:scala-library:${scalaStdlibVersion}"
+		compile "com.typesafe:scalalogging-slf4j_${scalaVersion}:${typesafeLoggingVersion}"
+		compile "com.twitter:util-core_${scalaVersion}:${twitterUtilVersion}"
 
-        testCompile "org.scalatest:scalatest_${scalaVersion}:${scalatestVersion}"
+		testCompile "org.scalatest:scalatest_${scalaVersion}:${scalatestVersion}"
+
+		runtime "org.scala-lang:scala-compiler:${scalaStdlibVersion}"
     }
 
     buildscript {
@@ -25,12 +27,12 @@ subprojects {
 
     sourceSets {
         main {
-            java.srcDirs = ['main/java'] // enable Zinc joint compilation
+            java.srcDirs = ['must_not_use'] // enable Zinc joint compilation
             scala.srcDirs = ['main/src']
             resources.srcDirs = ['main/res']
         }
         test {
-			java.srcDirs = ['test/src']
+			java.srcDirs = ['must_not_use']
             scala.srcDirs = ['test/src']
 			resources.srcDirs = ['test/res']
         }
