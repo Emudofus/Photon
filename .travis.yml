@@ -12,3 +12,5 @@ branches:
     - master
 before_install:
   - chmod +x ./gradlew
+script:
+  - ./gradlew -i check
