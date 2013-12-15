@@ -13,7 +13,7 @@ A Scala Dofus 1.29 emulator
   git clone https://github.com/Emudofus/Photon.git
   ```
 
-  You may install Git before
+  You may need to install Git before
 
 2. Then, go to the Photon folder with `cd Photon/` and run Gradle
 
